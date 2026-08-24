@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   CuidAgora — Design System
+   Tons claros, acolhedores e com alto contraste de leitura.
+   Todos os tokens são variáveis CSS para permitir "modo idoso" e
+   "alto contraste" sem duplicar componentes.
+   ========================================================================== */
+
+@theme {
+  --font-sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+
+  --color-canvas: #f4f8f7;
+  --color-surface: #ffffff;
+  --color-surface-muted: #eef4f3;
+  --color-line: #d8e3e0;
+  --color-ink: #14262b;
+  --color-ink-soft: #4a5f65;
+
+  --color-brand: #0f766e;
+  --color-brand-strong: #0b544e;
+  --color-brand-soft: #e3f2ef;
+  --color-accent: #6d5bd0;
+  --color-accent-soft: #eeebfb;
+
+  --color-good: #14663f;
+  --color-good-soft: #e3f5eb;
+  --color-warn: #8a5300;
+  --color-warn-soft: #fdf1de;
+  --color-alert: #a3212c;
+  --color-alert-soft: #fdeaec;
+
+  --radius-card: 1.25rem;
+}
+
+html {
+  font-size: 17px;
+  scroll-behavior: smooth;
+}
+
+/* Modo idoso: aumenta toda a escala (Tailwind usa rem) */
+html[data-elder="true"] {
+  font-size: 21px;
+}
+
+/* Alto contraste: sobrescreve apenas os tokens */
+html[data-contrast="true"] {
+  --color-canvas: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f0f0f0;
+  --color-line: #1a1a1a;
+  --color-ink: #000000;
+  --color-ink-soft: #1f1f1f;
+  --color-brand: #00504a;
+  --color-brand-strong: #003330;
+  --color-brand-soft: #ffffff;
+  --color-accent: #3a2d8f;
+  --color-accent-soft: #ffffff;
+  --color-good: #00441f;
+  --color-good-soft: #ffffff;
+  --color-warn: #5a3600;
+  --color-warn-soft: #ffffff;
+  --color-alert: #7a0010;
+  --color-alert-soft: #ffffff;
+}
+
+html[data-contrast="true"] .card,
+html[data-contrast="true"] .field-control {
+  border-width: 2px;
+}
+
+/* Modo simplificado: alvos de toque maiores e textos mais diretos */
+html[data-simple="true"] button,
+html[data-simple="true"] a[href],
+html[data-simple="true"] .field-control {
+  min-height: 3.5rem;
+}
+html[data-simple="true"] .no-simple {
+  display: none !important;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Foco sempre visível e espesso — requisito WCAG 2.4.7 / 2.4.11 */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: var(--color-brand-strong);
+  color: #fff;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0 0 0.75rem 0;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+}
+
+.field-control {
+  width: 100%;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border-radius: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  font-size: 1rem;
+  min-height: 3rem;
+}
+.field-control::placeholder {
+  color: #7b8b90;
+}
+.field-control[aria-invalid="true"] {
+  border-color: var(--color-alert);
+  border-width: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  .card {
+    break-inside: avoid;
+    border-color: #999;
+  }
+}

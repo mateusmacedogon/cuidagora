@@ -31,7 +31,14 @@ function at(dateIso, time) {
   return new Date(`${dateIso}T${time}:00${OFFSET}`);
 }
 
-const client = new pg.Client({ connectionString });
+const isLocal =
+  connectionString.includes("127.0.0.1") ||
+  connectionString.includes("localhost");
+
+const client = new pg.Client({
+  connectionString,
+  ssl: isLocal ? false : { rejectUnauthorized: false },
+});
 
 async function main() {
   await client.connect();

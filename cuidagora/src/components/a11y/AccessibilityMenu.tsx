@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, type ElementType } from "react";
+import {
+  Accessibility,
+  Check,
+  Contrast,
+  LayoutGrid,
+  Volume2,
+  ZoomIn,
+} from "lucide-react";
 
 import { saveAccessibilityPreferences } from "@/features/preferences/actions";
 
@@ -11,30 +19,35 @@ type Prefs = {
   readAloud: boolean;
 };
 
-const OPTIONS: { key: keyof Prefs; label: string; icon: string; description: string }[] = [
+const OPTIONS: {
+  key: keyof Prefs;
+  label: string;
+  icon: ElementType;
+  description: string;
+}[] = [
   {
     key: "elderMode",
     label: "Letras e botões maiores",
-    icon: "🔎",
-    description: "Aumenta o tamanho de tudo na tela.",
+    icon: ZoomIn,
+    description: "Aumenta o tamanho dos textos e alvos de toque na tela.",
   },
   {
     key: "highContrast",
     label: "Alto contraste",
-    icon: "🌗",
-    description: "Cores mais fortes para enxergar melhor.",
+    icon: Contrast,
+    description: "Cores e bordas mais nítidas para melhorar a visibilidade.",
   },
   {
     key: "simplifiedMode",
     label: "Modo simplificado",
-    icon: "🧩",
-    description: "Mostra só o essencial do dia.",
+    icon: LayoutGrid,
+    description: "Exibe apenas as funções essenciais para a rotina diária.",
   },
   {
     key: "readAloud",
-    label: "Botões de ouvir",
-    icon: "🔊",
-    description: "Exibe o botão de leitura em voz alta.",
+    label: "Recurso de áudio",
+    icon: Volume2,
+    description: "Habilita os botões para leitura do conteúdo em voz alta.",
   },
 ];
 
@@ -65,55 +78,85 @@ export function AccessibilityMenu({ initial }: { initial: Prefs }) {
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-controls="accessibility-panel"
-        className="inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-[var(--color-brand)] bg-[var(--color-surface)] px-4 py-2 text-sm font-semibold text-[var(--color-brand-strong)] hover:bg-[var(--color-brand-soft)]"
+        className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-teal-200 bg-teal-50/80 px-3.5 py-1.5 text-sm font-semibold text-teal-900 transition-colors hover:bg-teal-100/90 shadow-2xs cursor-pointer"
       >
-        <span aria-hidden="true">♿</span>
-        Acessibilidade
+        <Accessibility className="size-4 text-teal-700" aria-hidden="true" />
+        <span>Acessibilidade</span>
       </button>
 
       {open ? (
-        <div
-          id="accessibility-panel"
-          className="absolute right-0 z-40 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border-2 border-[var(--color-line)] bg-[var(--color-surface)] p-4 shadow-xl"
-        >
-          <h2 className="mb-1 text-lg font-bold">Deixar mais fácil de usar</h2>
-          <p className="mb-3 text-sm text-[var(--color-ink-soft)]">
-            As mudanças são salvas na sua conta.
-          </p>
-          <ul className="flex flex-col gap-2">
-            {OPTIONS.map((option) => {
-              const active = prefs[option.key];
-              return (
-                <li key={option.key}>
-                  <button
-                    type="button"
-                    onClick={() => toggle(option.key)}
-                    aria-pressed={active}
-                    className={`flex w-full items-start gap-3 rounded-xl border-2 p-3 text-left ${
-                      active
-                        ? "border-[var(--color-brand)] bg-[var(--color-brand-soft)]"
-                        : "border-[var(--color-line)] bg-[var(--color-surface)]"
-                    }`}
-                  >
-                    <span aria-hidden="true" className="text-xl">
-                      {option.icon}
-                    </span>
-                    <span className="flex-1">
-                      <span className="block font-semibold">{option.label}</span>
-                      <span className="block text-sm text-[var(--color-ink-soft)]">
-                        {option.description}
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setOpen(false)}
+            aria-hidden="true"
+          />
+          <div
+            id="accessibility-panel"
+            className="absolute right-0 z-50 mt-2 w-84 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl ring-1 ring-black/5"
+          >
+            <div className="mb-3">
+              <h2 className="text-base font-bold text-slate-900">Ajustes de Acessibilidade</h2>
+              <p className="text-xs text-slate-500">
+                Suas preferências são salvas automaticamente na sua conta.
+              </p>
+            </div>
+            <ul className="flex flex-col gap-2">
+              {OPTIONS.map((option) => {
+                const Icon = option.icon;
+                const active = prefs[option.key];
+                return (
+                  <li key={option.key}>
+                    <button
+                      type="button"
+                      onClick={() => toggle(option.key)}
+                      aria-pressed={active}
+                      className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors cursor-pointer ${
+                        active
+                          ? "border-teal-300 bg-teal-50/70"
+                          : "border-slate-200 bg-white hover:bg-slate-50"
+                      }`}
+                    >
+                      <div
+                        className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${
+                          active ? "bg-teal-600 text-white" : "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        <Icon className="size-4" aria-hidden="true" />
+                      </div>
+                      <span className="flex-1">
+                        <span className="block text-sm font-bold text-slate-900 leading-tight">
+                          {option.label}
+                        </span>
+                        <span className="block text-xs text-slate-500 mt-0.5 leading-snug">
+                          {option.description}
+                        </span>
                       </span>
-                    </span>
-                    <span className="text-sm font-bold">{active ? "Ligado ✅" : "Desligado"}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-          <p aria-live="polite" className="mt-3 text-sm text-[var(--color-ink-soft)]">
-            {pending ? "Salvando preferências…" : "Preferências salvas automaticamente."}
-          </p>
-        </div>
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold ${
+                          active
+                            ? "bg-teal-100 text-teal-800"
+                            : "bg-slate-100 text-slate-500"
+                        }`}
+                      >
+                        {active ? (
+                          <>
+                            <Check className="size-3" aria-hidden="true" /> Ativo
+                          </>
+                        ) : (
+                          "Inativo"
+                        )}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            <p aria-live="polite" className="mt-3 text-xs text-center font-medium text-slate-400">
+              {pending ? "Salvando alterações…" : "Tudo pronto e sincronizado."}
+            </p>
+          </div>
+        </>
       ) : null}
     </div>
   );

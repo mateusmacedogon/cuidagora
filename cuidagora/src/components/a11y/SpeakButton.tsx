@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Volume2, VolumeX } from "lucide-react";
 
 /** Leitura em voz alta usando a síntese de voz nativa do navegador (quando existir). */
 export function SpeakButton({ text, label = "Ouvir esta página" }: { text: string; label?: string }) {
@@ -39,10 +40,18 @@ export function SpeakButton({ text, label = "Ouvir esta página" }: { text: stri
       type="button"
       onClick={toggle}
       aria-pressed={speaking}
-      className="no-print inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-[var(--color-brand)] bg-[var(--color-surface)] px-4 py-2 text-sm font-semibold text-[var(--color-brand-strong)] hover:bg-[var(--color-brand-soft)]"
+      className={`no-print inline-flex min-h-10 items-center gap-2 rounded-xl border px-3.5 py-1.5 text-sm font-semibold transition-colors shadow-2xs cursor-pointer ${
+        speaking
+          ? "border-rose-300 bg-rose-50 text-rose-800"
+          : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300"
+      }`}
     >
-      <span aria-hidden="true">🔊</span>
-      {speaking ? "Parar leitura" : label}
+      {speaking ? (
+        <VolumeX className="size-4 text-rose-600" aria-hidden="true" />
+      ) : (
+        <Volume2 className="size-4 text-teal-600" aria-hidden="true" />
+      )}
+      <span>{speaking ? "Parar leitura" : label}</span>
     </button>
   );
 }

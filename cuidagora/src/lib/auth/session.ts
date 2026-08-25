@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { and, eq, gt, isNull } from "drizzle-orm";
 
-import { db } from "@/db";
+import { db, ensureDbReady } from "@/db";
 import { sessions, userPreferences, users } from "@/db/schema";
 
 export const SESSION_COOKIE = "cuidagora_session";
@@ -14,6 +14,7 @@ function hashToken(token: string): string {
 }
 
 export async function createSession(userId: string): Promise<void> {
+  await ensureDbReady();
   const token = randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
 
@@ -30,6 +31,7 @@ export async function createSession(userId: string): Promise<void> {
 }
 
 export async function destroySession(): Promise<void> {
+  await ensureDbReady();
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (token) {
@@ -62,6 +64,7 @@ const DEFAULT_PREFERENCES: SessionUser["preferences"] = {
 
 /** Lê a sessão do cookie. Retorna null quando ausente, expirada ou de conta excluída. */
 export async function getSessionUser(): Promise<SessionUser | null> {
+  await ensureDbReady();
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;

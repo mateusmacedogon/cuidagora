@@ -1,6 +1,8 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
+import type { ReactNode } from "react";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Feedback";
@@ -16,14 +18,21 @@ export function SubmitButton({
 }: {
   children: string;
   pendingLabel?: string;
-  variant?: "primary" | "secondary" | "quiet" | "danger" | "success";
+  variant?: "primary" | "secondary" | "quiet" | "danger" | "success" | "outline";
   size?: "sm" | "md" | "lg";
-  icon?: string;
+  icon?: ReactNode;
   className?: string;
 }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" variant={variant} size={size} icon={icon} disabled={pending} className={className}>
+    <Button
+      type="submit"
+      variant={variant}
+      size={size}
+      icon={pending ? <Loader2 className="animate-spin" /> : icon}
+      disabled={pending}
+      className={className}
+    >
       {pending ? pendingLabel : children}
     </Button>
   );

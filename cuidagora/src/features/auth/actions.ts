@@ -4,7 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
 import { and, eq, gt, isNull } from "drizzle-orm";
 
-import { db } from "@/db";
+import { db, ensureDbReady } from "@/db";
 import { passwordResetTokens, userPreferences, users } from "@/db/schema";
 import { createSession, destroySession } from "@/lib/auth/session";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
@@ -37,6 +37,7 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
   const { name, email, password, accountType } = parsed.data;
 
   try {
+    await ensureDbReady();
     const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1);
     if (existing.length > 0) {
       return errorState("Este e-mail já tem uma conta.", {
@@ -58,7 +59,7 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
   } catch (error) {
     console.error("Erro ao criar conta:", error);
     return errorState(
-      "Não foi possível conectar ao banco de dados. Verifique se o DATABASE_URL está configurado no Vercel e se as tabelas foram criadas.",
+      "Não foi possível salvar os dados. Tente novamente em instantes.",
     );
   }
 
@@ -72,6 +73,7 @@ export async function signInAction(_prev: ActionState, formData: FormData): Prom
   let successUserId: string | null = null;
 
   try {
+    await ensureDbReady();
     const rows = await db
       .select({ id: users.id, passwordHash: users.passwordHash })
       .from(users)
@@ -79,10 +81,9 @@ export async function signInAction(_prev: ActionState, formData: FormData): Prom
       .limit(1);
 
     const account = rows[0];
-    // Mensagem genérica: não revelamos se o e-mail existe.
-    const genericError = errorState("E-mail ou senha incorretos. Confira e tente de novo.");
+    const genericError = errorState("E-mail ou senha incorretos. Confira e tente novamente.");
     if (!account) {
-      await hashPassword(parsed.data.password); // custo constante contra enumeração
+      await hashPassword(parsed.data.password);
       return genericError;
     }
 
@@ -94,11 +95,29 @@ export async function signInAction(_prev: ActionState, formData: FormData): Prom
   } catch (error) {
     console.error("Erro ao fazer login:", error);
     return errorState(
-      "Não foi possível conectar ao banco de dados. Verifique a configuração do DATABASE_URL no Vercel.",
+      "Não foi possível concluir o login agora. Tente novamente.",
     );
   }
 
   if (successUserId) {
+    redirect("/inicio");
+  }
+
+  return errorState("E-mail ou senha incorretos. Confira e tente novamente.");
+}
+
+export async function demoSignInAction(role: "maria" | "joao"): Promise<void> {
+  await ensureDbReady();
+  const targetEmail = role === "joao" ? "joao@exemplo.com" : "maria@exemplo.com";
+
+  const rows = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(eq(users.email, targetEmail), isNull(users.deletedAt)))
+    .limit(1);
+
+  if (rows[0]) {
+    await createSession(rows[0].id);
     redirect("/inicio");
   }
 }
@@ -112,10 +131,6 @@ export async function signOutAction(): Promise<void> {
   redirect("/entrar");
 }
 
-/**
- * MVP sem serviço de e-mail: o link de redefinição é exibido na tela.
- * Em produção este link deve ser enviado por e-mail e nunca mostrado.
- */
 export async function requestPasswordResetAction(
   _prev: ActionState,
   formData: FormData,
@@ -124,6 +139,7 @@ export async function requestPasswordResetAction(
   if (!parsed.success) return zodErrorState(parsed.error);
 
   try {
+    await ensureDbReady();
     const rows = await db
       .select({ id: users.id })
       .from(users)
@@ -146,12 +162,12 @@ export async function requestPasswordResetAction(
 
     return {
       status: "success",
-      message: `Link de recuperação criado (válido por 1 hora): /redefinir-senha?token=${token}`,
+      message: `Link de recuperação gerado (válido por 1 hora): /redefinir-senha?token=${token}`,
       errors: {},
     };
   } catch (error) {
     console.error("Erro ao solicitar redefinição:", error);
-    return errorState("Não foi possível conectar ao banco de dados.");
+    return errorState("Não foi possível processar a recuperação agora.");
   }
 }
 
@@ -164,6 +180,7 @@ export async function resetPasswordAction(
 
   const id = tokenHash(parsed.data.token);
   try {
+    await ensureDbReady();
     const rows = await db
       .select({ id: passwordResetTokens.id, userId: passwordResetTokens.userId })
       .from(passwordResetTokens)
@@ -186,9 +203,9 @@ export async function resetPasswordAction(
       .set({ usedAt: new Date() })
       .where(eq(passwordResetTokens.id, token.id));
 
-    return successState("Senha alterada. Agora você já pode entrar.");
+    return successState("Senha alterada com sucesso! Agora você já pode entrar.");
   } catch (error) {
     console.error("Erro ao redefinir senha:", error);
-    return errorState("Não foi possível conectar ao banco de dados.");
+    return errorState("Não foi possível salvar a nova senha.");
   }
 }

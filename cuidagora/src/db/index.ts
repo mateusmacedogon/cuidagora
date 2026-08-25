@@ -1,28 +1,44 @@
-import { drizzle } from "drizzle-orm/node-postgres";
+import { drizzle as drizzlePg, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import * as schema from "./schema";
+import { pglite, pgliteDb, ensurePGliteReady } from "./memory-fallback";
 
-const databaseUrl =
-  process.env.DATABASE_URL ??
-  "postgresql://postgres:postgres@127.0.0.1:5432/app_db";
+const databaseUrl = process.env.DATABASE_URL;
 
-
-const isProduction = process.env.NODE_ENV === "production";
-const isLocal =
-  databaseUrl.includes("127.0.0.1") || databaseUrl.includes("localhost");
+const isRemotePostgres =
+  Boolean(databaseUrl) &&
+  !databaseUrl?.includes("127.0.0.1") &&
+  !databaseUrl?.includes("localhost");
 
 const globalForDb = globalThis as typeof globalThis & {
-  __arenaNextJsPostgresqlPool?: Pool;
+  __cuidagoraDb?: NodePgDatabase<typeof schema>;
+  __cuidagoraPool?: any;
 };
 
-export const pool =
-  globalForDb.__arenaNextJsPostgresqlPool ??
-  new Pool({
-    connectionString: databaseUrl,
-    ssl: isLocal ? false : { rejectUnauthorized: false },
-  });
+function initDb(): { db: NodePgDatabase<typeof schema>; pool: any } {
+  if (globalForDb.__cuidagoraDb) {
+    return { db: globalForDb.__cuidagoraDb, pool: globalForDb.__cuidagoraPool };
+  }
 
-if (!isProduction) {
-  globalForDb.__arenaNextJsPostgresqlPool = pool;
+  if (isRemotePostgres && databaseUrl) {
+    const poolInstance = new Pool({
+      connectionString: databaseUrl,
+      ssl: { rejectUnauthorized: false },
+    });
+    const dbInstance = drizzlePg(poolInstance, { schema });
+    globalForDb.__cuidagoraPool = poolInstance;
+    globalForDb.__cuidagoraDb = dbInstance;
+    return { db: dbInstance, pool: poolInstance };
+  }
+
+  globalForDb.__cuidagoraPool = pglite;
+  globalForDb.__cuidagoraDb = pgliteDb as unknown as NodePgDatabase<typeof schema>;
+  return { db: pgliteDb as unknown as NodePgDatabase<typeof schema>, pool: pglite };
 }
 
-export const db = drizzle(pool);
+export async function ensureDbReady() {
+  if (isRemotePostgres) return;
+  await ensurePGliteReady();
+}
+
+export const { db, pool } = initDb();

@@ -3,9 +3,9 @@ import { comparatorLabel, guidelineMetricMeta } from "@/lib/domain";
 /**
  * SEMÁFORO DO CUIDADO
  * ------------------------------------------------------------------
- * Este módulo NÃO contém conhecimento médico. Ele apenas compara os
- * números registrados pelo usuário com as ORIENTAÇÕES QUE ELE MESMO
- * (ou um profissional autorizado) cadastrou previamente.
+ * Este módulo NÃO contém conhecimento médico autônomo. Ele compara os
+ * registros do usuário com as ORIENTAÇÕES QUE ELE MESMO
+ * (ou um profissional de saúde) cadastrou previamente.
  * Sem orientações cadastradas, o semáforo permanece informativo.
  */
 
@@ -65,9 +65,9 @@ export function describeRule(rule: GuidelineRule): string {
 }
 
 const PRESENTATION: Record<CareLevel, { icon: string; word: string; title: string }> = {
-  ok: { icon: "🟢", word: "Verde", title: "Tudo dentro da sua rotina" },
-  attention: { icon: "🟡", word: "Amarelo", title: "Atenção: veja a orientação cadastrada" },
-  urgent: { icon: "🔴", word: "Vermelho", title: "Siga a orientação cadastrada para buscar atendimento" },
+  ok: { icon: "check-circle", word: "Verde / Estável", title: "Tudo dentro dos parâmetros da sua rotina" },
+  attention: { icon: "alert-triangle", word: "Amarelo / Atenção", title: "Atenção preventiva: consulte a orientação cadastrada" },
+  urgent: { icon: "alert-octagon", word: "Vermelho / Urgente", title: "Ação requerida: siga a orientação para buscar atendimento" },
 };
 
 export function evaluateCareStatus(rules: GuidelineRule[], metrics: CareMetrics): CareStatus {
@@ -94,11 +94,11 @@ export function evaluateCareStatus(rules: GuidelineRule[], metrics: CareMetrics)
   const description =
     level === "ok"
       ? hasGuidelines
-        ? "Nenhuma das orientações que você cadastrou foi acionada com os registros de hoje."
-        : "Você ainda não cadastrou orientações. Cadastre as orientações recebidas do seu profissional de saúde para que o semáforo funcione."
+        ? "Nenhuma das orientações cadastradas foi acionada com os registros de hoje."
+        : "Você ainda não cadastrou orientações. Cadastre as orientações recebidas do seu médico para que o semáforo clínico monitore os limites combinados."
       : level === "attention"
-        ? "Um ou mais registros de hoje acionaram orientações de atenção que você cadastrou."
-        : "Um ou mais registros de hoje acionaram orientações urgentes que você cadastrou. Siga exatamente o que está escrito abaixo.";
+        ? "Um ou mais registros de hoje atingiram o limite de atenção previamente cadastrado."
+        : "Um ou mais registros de hoje atingiram o limite de urgência previamente cadastrado. Siga a orientação médica abaixo.";
 
   return { level, ...presentation, description, triggered, hasGuidelines };
 }

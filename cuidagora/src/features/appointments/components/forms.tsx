@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { Calendar, HelpCircle, Save } from "lucide-react";
 
 import { TextAreaField, TextField } from "@/components/ui/Field";
 import { FormFeedback, SubmitButton } from "@/components/ui/SubmitButton";
@@ -25,30 +26,30 @@ export function AppointmentForm({ appointment }: { appointment?: AppointmentValu
       <FormFeedback state={state} />
       {appointment?.id ? <input type="hidden" name="id" value={appointment.id} /> : null}
       <TextField
-        label="Especialidade"
+        label="Especialidade médica / área"
         name="specialty"
         required
         defaultValue={appointment?.specialty}
         error={state.errors.specialty}
-        placeholder="Ex.: Cardiologia"
+        placeholder="Ex.: Cardiologia, Geriatria, Oftalmologia"
       />
       <TextField
-        label="Profissional"
+        label="Profissional de saúde"
         name="professional"
         defaultValue={appointment?.professional}
         error={state.errors.professional}
         placeholder="Ex.: Dra. Ana Fictícia"
       />
       <TextField
-        label="Local"
+        label="Local da consulta ou endereço"
         name="location"
         defaultValue={appointment?.location}
         error={state.errors.location}
-        placeholder="Ex.: Clínica Exemplo, sala 3"
+        placeholder="Ex.: Centro Médico Saúde — Sala 402"
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField
-          label="Dia"
+          label="Data agendada"
           name="date"
           type="date"
           required
@@ -65,14 +66,14 @@ export function AppointmentForm({ appointment }: { appointment?: AppointmentValu
         />
       </div>
       <TextAreaField
-        label="Observações"
+        label="Instruções e lembretes"
         name="notes"
         defaultValue={appointment?.notes}
-        hint="Ex.: levar exames, ir em jejum."
+        hint="Ex.: levar histórico de pressão, resultados de exames de sangue, ir em jejum."
         error={state.errors.notes}
       />
-      <SubmitButton size="lg" icon="📅">
-        {appointment?.id ? "Salvar alterações" : "Cadastrar consulta"}
+      <SubmitButton size="lg" icon={<Calendar className="size-5" />}>
+        {appointment?.id ? "Salvar alterações" : "Confirmar agendamento"}
       </SubmitButton>
     </form>
   );
@@ -85,13 +86,15 @@ export function QuestionForm({ appointmentId }: { appointmentId?: string }) {
       <FormFeedback state={state} />
       {appointmentId ? <input type="hidden" name="appointmentId" value={appointmentId} /> : null}
       <TextField
-        label="O que você quer perguntar na consulta?"
+        label="Dúvida ou ponto a esclarecer na consulta"
         name="question"
         required
         error={state.errors.question}
-        placeholder="Ex.: Posso continuar caminhando todos os dias?"
+        placeholder="Ex.: Posso continuar caminhando todos os dias com a dosagem atual?"
       />
-      <SubmitButton icon="❓">Salvar pergunta</SubmitButton>
+      <SubmitButton icon={<HelpCircle className="size-4" />}>
+        Registrar pergunta no caderno
+      </SubmitButton>
     </form>
   );
 }

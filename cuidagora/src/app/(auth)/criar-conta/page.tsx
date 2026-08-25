@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { SignUpForm } from "@/features/auth/forms";
 import { getSessionUser } from "@/lib/auth/session";
 
-export const metadata: Metadata = { title: "Criar conta — CuidAgora" };
+export const metadata: Metadata = { title: "Criar Conta — CuidAgora" };
 
 export default async function SignUpPage() {
   const user = await getSessionUser();
@@ -12,10 +12,14 @@ export default async function SignUpPage() {
 
   return (
     <>
-      <h1 className="mb-2 text-2xl font-bold">Criar sua conta</h1>
-      <p className="mb-6 text-[var(--color-ink-soft)]">
-        São só quatro informações. Nada de dados desnecessários.
-      </p>
+      <div className="mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+          Criar nova conta
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Preencha os campos abaixo para iniciar a organização dos seus cuidados de saúde.
+        </p>
+      </div>
       <SignUpForm />
     </>
   );

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Calendar, FileText } from "lucide-react";
 
 import { PrintButton } from "@/features/summary/components/PrintButton";
 import { SummaryReport } from "@/features/summary/components/SummaryReport";
@@ -7,13 +8,13 @@ import { SafetyNotice } from "@/components/ui/Feedback";
 import { buildSummary, resolveRange } from "@/features/summary/data";
 import { requireUser } from "@/lib/auth/session";
 
-export const metadata: Metadata = { title: "Resumo para Consulta — CuidAgora" };
+export const metadata: Metadata = { title: "Relatório para Consulta Médica — CuidAgora" };
 
 const PRESETS = [
   { value: "7", label: "Últimos 7 dias" },
   { value: "15", label: "Últimos 15 dias" },
   { value: "30", label: "Últimos 30 dias" },
-  { value: "custom", label: "Período que eu escolher" },
+  { value: "custom", label: "Período personalizado" },
 ];
 
 export default async function SummaryPage({
@@ -31,9 +32,9 @@ export default async function SummaryPage({
     <div className="flex flex-col gap-6">
       <div className="no-print">
         <PageHeader
-          icon="📄"
-          title="Gerar Resumo para Consulta"
-          description="Um documento organizado com o que você registrou. Serve para levar impresso ou mostrar na tela."
+          icon={<FileText className="size-7 text-teal-700" />}
+          title="Relatório Estruturado para Consulta"
+          description="Documento clínico consolidado compilando adesão, medicamentos, histórico de pressão, glicemia e sintomas."
         />
       </div>
 
@@ -42,20 +43,20 @@ export default async function SummaryPage({
       </div>
 
       <Card className="no-print">
-        <CardTitle icon="🗓️" level={2}>
-          Escolha o período
+        <CardTitle icon={<Calendar className="size-5 text-teal-700" />} level={2}>
+          Intervalo do Relatório
         </CardTitle>
         <form method="get" className="flex flex-col gap-4">
           <fieldset className="flex flex-col gap-2">
-            <legend className="text-base font-semibold">Período</legend>
+            <legend className="text-sm font-bold text-slate-900">Período de compilação</legend>
             <div className="flex flex-wrap gap-2">
               {PRESETS.map((item) => (
                 <label
                   key={item.value}
-                  className={`min-h-12 cursor-pointer rounded-full border-2 px-5 py-2.5 font-semibold ${
+                  className={`min-h-10 cursor-pointer rounded-xl border px-4 py-2 text-xs sm:text-sm font-semibold transition-colors shadow-2xs ${
                     preset === item.value
-                      ? "border-[var(--color-brand)] bg-[var(--color-brand-soft)]"
-                      : "border-[var(--color-line)]"
+                      ? "border-teal-300 bg-teal-50 text-teal-900 font-bold"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                   }`}
                 >
                   <input
@@ -72,21 +73,25 @@ export default async function SummaryPage({
           </fieldset>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="de" className="text-base font-semibold">
-                De
+              <label htmlFor="de" className="text-xs sm:text-sm font-semibold text-slate-700">
+                Data inicial
               </label>
-              <input id="de" name="de" type="date" defaultValue={params.de ?? range.fromIso} className="field-control" />
+              <input id="de" name="de" type="date" defaultValue={params.de ?? range.fromIso} className="field-control mt-1" />
             </div>
             <div>
-              <label htmlFor="ate" className="text-base font-semibold">
-                Até
+              <label htmlFor="ate" className="text-xs sm:text-sm font-semibold text-slate-700">
+                Data final
               </label>
-              <input id="ate" name="ate" type="date" defaultValue={params.ate ?? range.toIso} className="field-control" />
+              <input id="ate" name="ate" type="date" defaultValue={params.ate ?? range.toIso} className="field-control mt-1" />
             </div>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <button type="submit" className="min-h-12 rounded-full bg-[var(--color-brand)] px-6 py-3 font-semibold text-white">
-              📄 Gerar resumo
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <button
+              type="submit"
+              className="inline-flex items-center gap-2 min-h-11 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-teal-700 transition-colors shadow-xs cursor-pointer"
+            >
+              <FileText className="size-4" />
+              Atualizar relatório
             </button>
             <PrintButton />
           </div>

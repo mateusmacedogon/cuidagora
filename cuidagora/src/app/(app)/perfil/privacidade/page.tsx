@@ -1,22 +1,30 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  ArrowLeft,
+  Database,
+  Lock,
+  ShieldCheck,
+  Trash2,
+  Users,
+} from "lucide-react";
 
 import { Card, CardTitle, PageHeader } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Feedback";
 import { DeleteAccountForm } from "@/features/account/components/DeleteAccountForm";
 import { requireUser } from "@/lib/auth/session";
 
-export const metadata: Metadata = { title: "Privacidade — CuidAgora" };
+export const metadata: Metadata = { title: "Privacidade e Proteção de Dados (LGPD) — CuidAgora" };
 
 const STORED_DATA = [
-  "Nome e e-mail da conta (a senha é guardada apenas de forma criptografada).",
-  "Medicamentos, doses e horários que você mesmo cadastrou.",
-  "Cuidados do dia e o horário em que você marcou cada um como concluído.",
-  "Check-ins diários, sintomas e observações escritas ou ditadas por você.",
-  "Medições de pressão, glicemia e hidratação.",
-  "Consultas, perguntas e orientações que você cadastrou.",
-  "Preferências de acessibilidade (letras maiores, contraste, modo simplificado).",
-  "Lista de cuidadores autorizados e as permissões de cada um.",
+  "Identificação de conta: Nome completo e e-mail (senhas protegidas via criptografia scrypt com salt individual).",
+  "Registros de prescrições: Medicamentos cadastrados, dosagens e horários de tomada.",
+  "Histórico de adesão: Cuidados diários concluídos e respectivos registros de data/hora.",
+  "Check-ins e sintomas: Registros de humor, dores e notas de áudio/texto.",
+  "Sinais vitais: Leituras pontuais de pressão arterial, glicemia capilar e hidratação.",
+  "Agendamentos: Consultas médicas agendadas e cadernos de perguntas para o profissional.",
+  "Acessibilidade e usabilidade: Preferências salvas de tipografia, contraste e modo simplificado.",
+  "Gestão de acessos: Relação de cuidadores autorizados e mapa de permissões granulares.",
 ];
 
 export default async function PrivacyPage() {
@@ -25,68 +33,76 @@ export default async function PrivacyPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        icon="🔒"
-        title="Privacidade e seus dados"
-        description="Transparência sobre o que guardamos e controle total para apagar."
+        icon={<Lock className="size-7 text-teal-700" />}
+        title="Privacidade, Segurança e LGPD"
+        description="Diretrizes de proteção de dados, controle de acessos e direito à eliminação definitiva."
       />
 
       <Card>
-        <CardTitle icon="🗂️">O que o CuidAgora guarda</CardTitle>
-        <ul className="list-disc pl-5">
+        <CardTitle icon={<Database className="size-5 text-teal-700" />}>
+          Dados Coletados e Armazenados
+        </CardTitle>
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-slate-700">
           {STORED_DATA.map((item) => (
-            <li key={item} className="mb-1">
-              {item}
-            </li>
+            <li key={item}>{item}</li>
           ))}
         </ul>
       </Card>
 
       <Card>
-        <CardTitle icon="🛡️">Como protegemos</CardTitle>
-        <ul className="list-disc pl-5">
-          <li className="mb-1">Senha guardada com função de derivação lenta (scrypt) — nunca em texto puro.</li>
-          <li className="mb-1">Sessão em cookie HttpOnly, com SameSite estrito o suficiente para reduzir CSRF.</li>
-          <li className="mb-1">Toda leitura e escrita é verificada no servidor e sempre limitada ao dono dos dados.</li>
-          <li className="mb-1">Cuidadores recebem somente as permissões marcadas por você (menor privilégio).</li>
-          <li className="mb-1">Consultas ao banco são parametrizadas, evitando injeção de SQL.</li>
-          <li className="mb-1">Nenhum registro de log guarda conteúdo de saúde.</li>
+        <CardTitle icon={<ShieldCheck className="size-5 text-teal-700" />}>
+          Padrões de Segurança Aplicados
+        </CardTitle>
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-slate-700 mb-4">
+          <li>Criptografia de credenciais utilizando derivação de chaves segura via scrypt.</li>
+          <li>Sessões autenticadas via cookies HttpOnly com proteção SameSite contra CSRF.</li>
+          <li>Autorização em camada de servidor com isolamento estrito por ID de usuário em todas as consultas.</li>
+          <li>Princípio do menor privilégio em compartilhamentos com cuidadores.</li>
+          <li>Consultas parametrizadas com proteção nativa contra injeção SQL.</li>
+          <li>Inexistência de logs de aplicação contendo conteúdo sensível de saúde.</li>
         </ul>
-        <Alert tone="neutral" title="Sobre a LGPD">
-          O CuidAgora foi construído seguindo princípios da LGPD (finalidade, minimização, transparência e
-          eliminação). Isso não garante, por si só, conformidade legal: uma operação real exige avaliação
-          jurídica, contrato de tratamento de dados e política de privacidade publicada.
+        <Alert tone="neutral" title="Conformidade LGPD">
+          O CuidAgora foi arquitetado com base nos princípios de finalidade, minimização e segurança da Lei Geral de Proteção de Dados (Lei nº 13.709/2018).
         </Alert>
       </Card>
 
       <Card>
-        <CardTitle icon="🤝">Compartilhamento</CardTitle>
-        <p className="mb-3">
-          Nada é compartilhado automaticamente. Só quem você autorizar em{" "}
-          <Link href="/perfil/cuidadores" className="font-semibold underline">
+        <CardTitle icon={<Users className="size-5 text-teal-700" />}>
+          Compartilhamento de Registros
+        </CardTitle>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          Nenhum dado é compartilhado publicamente ou com terceiros não autorizados. Somente pessoas expressamente vinculadas em{" "}
+          <Link href="/perfil/cuidadores" className="font-bold text-teal-700 hover:text-teal-900 hover:underline">
             Quem pode me acompanhar
           </Link>{" "}
-          consegue ver seus dados, e apenas nos itens que você marcou.
+          possuem visualização restrita aos módulos selecionados.
         </p>
       </Card>
 
-      <Card className="border-2 border-[var(--color-alert)]">
-        <CardTitle icon="🗑️" description="Esta ação não pode ser desfeita.">
-          Excluir minha conta e meus dados
+      <Card className="border-rose-200 bg-rose-50/40">
+        <CardTitle
+          icon={<Trash2 className="size-5 text-rose-600" />}
+          description="Direito de eliminação definitiva — Ação irreversível."
+        >
+          Excluir Conta e Apagar Todos os Dados
         </CardTitle>
-        <Alert tone="danger" title="Atenção">
-          Ao confirmar, sua conta, medicamentos, cuidados, medições, sintomas, consultas, resumos e
-          compartilhamentos serão apagados definitivamente.
+        <Alert tone="danger" title="Aviso Importante de Exclusão">
+          Ao confirmar a exclusão, todos os seus dados clínicos, medicamentos, medições, histórico e permissões vinculadas serão permanentemente destruídos dos nossos bancos de dados.
         </Alert>
         <div className="mt-4">
           <DeleteAccountForm />
         </div>
       </Card>
 
-      <p>
-        <Link href="/perfil" className="font-semibold underline">
-          ← Voltar para o perfil
+      <div>
+        <Link
+          href="/perfil"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal-700 hover:text-teal-900 hover:underline"
+        >
+          <ArrowLeft className="size-4" />
+          Voltar para o perfil
         </Link>
-      </p>
+      </div>
     </div>
   );
 }

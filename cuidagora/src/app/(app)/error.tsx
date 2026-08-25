@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { AlertTriangle, Home, RotateCcw } from "lucide-react";
 
 export default function AppError({ reset }: { error: Error; reset: () => void }) {
   useEffect(() => {
@@ -9,27 +10,31 @@ export default function AppError({ reset }: { error: Error; reset: () => void })
   }, []);
 
   return (
-    <div className="card p-6" role="alert">
-      <h1 className="text-2xl font-bold">
-        <span aria-hidden="true">😕 </span>
-        Algo não carregou como esperado
-      </h1>
-      <p className="mt-2 text-[var(--color-ink-soft)]">
-        Seus dados estão salvos. Tente abrir a página de novo.
+    <div className="card p-6 border-amber-200 bg-amber-50/50" role="alert">
+      <div className="flex items-center gap-2.5">
+        <AlertTriangle className="size-6 text-amber-600 shrink-0" />
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+          Algo não carregou como esperado
+        </h1>
+      </div>
+      <p className="mt-2 text-sm sm:text-base text-slate-600">
+        Seus dados permanecem seguros e preservados no banco de dados. Tente recarregar a tela.
       </p>
-      <div className="mt-4 flex flex-wrap gap-3">
+      <div className="mt-5 flex flex-wrap gap-3">
         <button
           type="button"
           onClick={reset}
-          className="min-h-12 rounded-full bg-[var(--color-brand)] px-6 py-3 font-semibold text-white"
+          className="inline-flex items-center gap-2 min-h-11 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-teal-700 transition-colors shadow-xs cursor-pointer"
         >
-          🔄 Tentar de novo
+          <RotateCcw className="size-4" />
+          Tentar novamente
         </button>
         <a
           href="/inicio"
-          className="min-h-12 rounded-full border-2 border-[var(--color-brand)] px-6 py-3 font-semibold text-[var(--color-brand-strong)]"
+          className="inline-flex items-center gap-2 min-h-11 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer shadow-2xs"
         >
-          🏠 Ir para o início
+          <Home className="size-4 text-slate-500" />
+          Ir para o início
         </a>
       </div>
     </div>

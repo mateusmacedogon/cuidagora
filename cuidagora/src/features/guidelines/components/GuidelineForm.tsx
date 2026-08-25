@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { Save, ShieldAlert, ShieldCheck } from "lucide-react";
 
 import { SelectField, TextAreaField, TextField } from "@/components/ui/Field";
 import { FormFeedback, SubmitButton } from "@/components/ui/SubmitButton";
@@ -14,24 +15,24 @@ export function GuidelineForm() {
     <form action={action} className="flex flex-col gap-4" noValidate>
       <FormFeedback state={state} />
       <SelectField
-        label="Tipo de sinal"
+        label="Nível de alerta do semáforo"
         name="level"
         required
         defaultValue="attention"
         options={[
-          { value: "attention", label: "🟡 Atenção" },
-          { value: "urgent", label: "🔴 Buscar atendimento" },
+          { value: "attention", label: "Sinal Amarelo — Atenção / Reavaliação Preventiva" },
+          { value: "urgent", label: "Sinal Vermelho — Urgência / Buscar Atendimento" },
         ]}
       />
       <TextField
-        label="Título da orientação"
+        label="Título da condição clínica"
         name="title"
         required
         error={state.errors.title}
-        placeholder="Ex.: Pressão alta"
+        placeholder="Ex.: Pressão arterial sistólica elevada"
       />
       <SelectField
-        label="Quando o valor de..."
+        label="Parâmetro monitorado"
         name="metric"
         required
         defaultValue="systolic"
@@ -39,14 +40,14 @@ export function GuidelineForm() {
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <SelectField
-          label="...for"
+          label="Operador de comparação"
           name="comparator"
           required
           defaultValue="gte"
           options={COMPARATORS.map((item) => ({ value: item.value, label: item.label }))}
         />
         <TextField
-          label="Valor de referência"
+          label="Valor limite de disparo"
           name="threshold"
           type="number"
           step="0.1"
@@ -57,21 +58,21 @@ export function GuidelineForm() {
         />
       </div>
       <TextAreaField
-        label="O que fazer nesse caso (orientação recebida)"
+        label="Conduta médica prescrita (orientação)"
         name="instruction"
         required
         error={state.errors.instruction}
-        hint="Escreva exatamente o que o profissional orientou. O CuidAgora nunca cria orientações."
-        placeholder="Ex.: Repetir a medição após 15 minutos em repouso e ligar para a clínica."
+        hint="Descreva o procedimento fornecido pelo seu profissional de saúde."
+        placeholder="Ex.: Repousar 15 minutos em ambiente calmo e repetir a medição. Se persistir, contatar o consultório."
       />
       <TextField
-        label="Quem passou essa orientação"
+        label="Profissional ou plano de origem"
         name="source"
         error={state.errors.source}
         placeholder="Ex.: Dra. Ana Fictícia — Cardiologia"
       />
-      <SubmitButton size="lg" icon="🧭">
-        Cadastrar orientação
+      <SubmitButton size="lg" icon={<ShieldCheck className="size-5" />}>
+        Cadastrar orientação clínica
       </SubmitButton>
     </form>
   );

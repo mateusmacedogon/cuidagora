@@ -36,9 +36,9 @@ async function runMigrations() {
     const sqlContent = fs.readFileSync(sqlPath, "utf-8");
 
     await client.query(sqlContent);
-    console.log("✅ Tabelas e índices criados/verificados com sucesso!");
+    console.log("[SUCESSO] Tabelas e índices criados/verificados com sucesso!");
   } catch (error) {
-    console.error("❌ Erro ao executar migrações:", error);
+    console.error("[ERRO] Erro ao executar migrações:", error);
     process.exit(1);
   } finally {
     await client.end();

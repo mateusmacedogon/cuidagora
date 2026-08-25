@@ -1,10 +1,9 @@
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { randomBytes, scrypt as scryptCallback } from "node:crypto";
 import { promisify } from "node:util";
 import * as schema from "./schema";
+import { SCHEMA_SQL } from "./schema-sql";
 
 const scrypt = promisify(scryptCallback);
 
@@ -36,11 +35,36 @@ const globalForMem = globalThis as typeof globalThis & {
   __pgliteInitPromise?: Promise<void>;
 };
 
-export const pglite = globalForMem.__pgliteInstance ?? new PGlite();
-export const pgliteDb = globalForMem.__pgliteDb ?? drizzle(pglite, { schema });
+function getPGliteInstance(): PGlite {
+  if (!globalForMem.__pgliteInstance) {
+    globalForMem.__pgliteInstance = new PGlite();
+  }
+  return globalForMem.__pgliteInstance;
+}
 
-globalForMem.__pgliteInstance = pglite;
-globalForMem.__pgliteDb = pgliteDb;
+function getPGliteDbInstance() {
+  if (!globalForMem.__pgliteDb) {
+    const inst = getPGliteInstance();
+    globalForMem.__pgliteDb = drizzle(inst, { schema });
+  }
+  return globalForMem.__pgliteDb;
+}
+
+export const pglite = new Proxy({} as PGlite, {
+  get(_target, prop) {
+    const inst = getPGliteInstance();
+    const val = (inst as any)[prop];
+    return typeof val === "function" ? val.bind(inst) : val;
+  },
+});
+
+export const pgliteDb = new Proxy({} as any, {
+  get(_target, prop) {
+    const inst = getPGliteDbInstance();
+    const val = (inst as any)[prop];
+    return typeof val === "function" ? val.bind(inst) : val;
+  },
+});
 
 export async function ensurePGliteReady(): Promise<void> {
   if (globalForMem.__pgliteInitPromise) {
@@ -48,27 +72,18 @@ export async function ensurePGliteReady(): Promise<void> {
   }
 
   globalForMem.__pgliteInitPromise = (async () => {
-    const schemaPath = join(process.cwd(), "scripts", "schema.sql");
     try {
-      let sql = readFileSync(schemaPath, "utf8");
-      sql = sql.replace(/CREATE EXTENSION[^\;]+\;/gi, "");
-      await pglite.exec(sql);
+      const inst = getPGliteInstance();
+      const sql = SCHEMA_SQL.replace(/CREATE EXTENSION[^\;]+\;/gi, "");
+      await inst.exec(sql);
+      await seedPGlite(inst);
     } catch (err) {
-      console.warn("Aviso ao inicializar schema no PGlite:", err);
-    }
-
-    try {
-      await seedPGlite(pglite);
-    } catch (err) {
-      console.warn("Aviso ao popular PGlite:", err);
+      console.warn("Aviso ao inicializar fallback em memória:", err);
     }
   })();
 
   return globalForMem.__pgliteInitPromise;
 }
-
-// Inicia imediatamente
-ensurePGliteReady().catch(() => {});
 
 async function seedPGlite(client: PGlite) {
   const password = await hashPassword("cuidagora123");

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "npm --prefix cuidagora run build",
+  "outputDirectory": "cuidagora/.next",
+  "installCommand": "npm --prefix cuidagora install",
+  "devCommand": "npm --prefix cuidagora run dev"
+}

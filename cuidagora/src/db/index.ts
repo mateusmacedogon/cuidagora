@@ -3,7 +3,11 @@ import { Pool } from "pg";
 import * as schema from "./schema";
 import { pglite, pgliteDb, ensurePGliteReady } from "./memory-fallback";
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl =
+  process.env.POSTGRES_URL ||
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_PRISMA_URL ||
+  process.env.POSTGRES_URL_NON_POOLING;
 
 const isRemotePostgres =
   Boolean(databaseUrl) &&
@@ -21,9 +25,15 @@ function initDb(): { db: NodePgDatabase<typeof schema>; pool: any } {
   }
 
   if (isRemotePostgres && databaseUrl) {
+    const isLocal =
+      databaseUrl.includes("127.0.0.1") || databaseUrl.includes("localhost");
+
     const poolInstance = new Pool({
       connectionString: databaseUrl,
-      ssl: { rejectUnauthorized: false },
+      ssl: isLocal ? false : { rejectUnauthorized: false },
+      max: process.env.NODE_ENV === "production" ? 10 : 5,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
     });
     const dbInstance = drizzlePg(poolInstance, { schema });
     globalForDb.__cuidagoraPool = poolInstance;
@@ -39,6 +49,14 @@ function initDb(): { db: NodePgDatabase<typeof schema>; pool: any } {
 export async function ensureDbReady() {
   if (isRemotePostgres) return;
   await ensurePGliteReady();
+}
+
+export function isRemoteDatabase(): boolean {
+  return isRemotePostgres;
+}
+
+export function getDatabaseProvider(): "postgresql" | "pglite" {
+  return isRemotePostgres ? "postgresql" : "pglite";
 }
 
 export const { db, pool } = initDb();

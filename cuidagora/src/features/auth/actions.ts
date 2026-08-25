@@ -110,11 +110,36 @@ export async function demoSignInAction(role: "maria" | "joao"): Promise<void> {
   await ensureDbReady();
   const targetEmail = role === "joao" ? "joao@exemplo.com" : "maria@exemplo.com";
 
-  const rows = await db
+  let rows = await db
     .select({ id: users.id })
     .from(users)
     .where(and(eq(users.email, targetEmail), isNull(users.deletedAt)))
     .limit(1);
+
+  if (!rows[0]) {
+    try {
+      const name =
+        role === "joao"
+          ? "João Fictício (cuidador)"
+          : "Maria Aparecida (demonstração)";
+      const accountType = role === "joao" ? "caregiver" : "person";
+      const passwordHash = await hashPassword("cuidagora123");
+      const inserted = await db
+        .insert(users)
+        .values({ name, email: targetEmail, passwordHash, accountType })
+        .returning({ id: users.id });
+
+      if (inserted[0]) {
+        await db
+          .insert(userPreferences)
+          .values({ userId: inserted[0].id })
+          .onConflictDoNothing();
+        rows = inserted;
+      }
+    } catch (e) {
+      console.warn("Aviso ao criar usuário de demonstração sob demanda:", e);
+    }
+  }
 
   if (rows[0]) {
     await createSession(rows[0].id);

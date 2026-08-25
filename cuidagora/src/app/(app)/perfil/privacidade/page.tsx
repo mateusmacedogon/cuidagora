@@ -79,6 +79,26 @@ export default async function PrivacyPage() {
         </p>
       </Card>
 
+      <Card className="border-teal-200 bg-teal-50/40">
+        <CardTitle
+          icon={<Database className="size-5 text-teal-700" />}
+          description="Direito de Portabilidade de Dados — Art. 18, V da LGPD"
+        >
+          Exportar Meus Dados de Saúde
+        </CardTitle>
+        <p className="text-sm text-slate-700 leading-relaxed mb-4">
+          Você pode baixar a qualquer momento um arquivo JSON estruturado contendo todos os seus medicamentos, medições, histórico de adesão, sintomas e consultas cadastrados.
+        </p>
+        <a
+          href="/api/exportar-dados"
+          download
+          className="inline-flex items-center gap-2 min-h-11 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-teal-700 transition-colors shadow-xs"
+        >
+          <Database className="size-4" />
+          Baixar arquivo com meus dados (JSON)
+        </a>
+      </Card>
+
       <Card className="border-rose-200 bg-rose-50/40">
         <CardTitle
           icon={<Trash2 className="size-5 text-rose-600" />}

@@ -24,6 +24,8 @@ import {
   HydrationCard,
   TodayTasksCard,
 } from "@/features/care/components/care-widgets";
+import { EmergencyCard } from "@/features/care/components/EmergencyCard";
+import { QuickLogHub } from "@/features/care/components/QuickLogHub";
 import {
   buildCareMetrics,
   getCheckin,
@@ -32,6 +34,7 @@ import {
   listGuidelines,
   listTasksForDate,
 } from "@/features/care/data";
+import { listMyCaregivers } from "@/features/caregiver/data";
 import { requireUser } from "@/lib/auth/session";
 import { evaluateCareStatus } from "@/lib/care-status";
 import { firstNameOf, formatDateTime, formatLongDate, greeting, todayIso } from "@/lib/date";
@@ -44,15 +47,18 @@ export default async function DashboardPage() {
   const dateIso = todayIso();
   const simplified = user.preferences.simplifiedMode;
 
-  const [tasks, hydration, nextAppointment, guidelines, metrics, checkin] = await Promise.all([
-    listTasksForDate(user.id, dateIso),
-    getHydrationTotal(user.id, dateIso),
-    getNextAppointment(user.id),
-    listGuidelines(user.id, true),
-    buildCareMetrics(user.id, dateIso, user.preferences.hydrationGoalMl),
-    getCheckin(user.id, dateIso),
-  ]);
+  const [tasks, hydration, nextAppointment, guidelines, metrics, checkin, caregivers] =
+    await Promise.all([
+      listTasksForDate(user.id, dateIso),
+      getHydrationTotal(user.id, dateIso),
+      getNextAppointment(user.id),
+      listGuidelines(user.id, true),
+      buildCareMetrics(user.id, dateIso, user.preferences.hydrationGoalMl),
+      getCheckin(user.id, dateIso),
+      listMyCaregivers(user.id),
+    ]);
 
+  const primaryCaregiver = caregivers[0];
   const status = evaluateCareStatus(guidelines, metrics);
   const done = tasks.filter((task) => task.completedAt);
   const pending = tasks.filter((task) => !task.completedAt);
@@ -92,7 +98,17 @@ export default async function DashboardPage() {
         ) : null}
       </header>
 
+      {/* Cartão de Emergência Rápida SOS */}
+      <EmergencyCard
+        caregiverName={primaryCaregiver?.caregiverName}
+        caregiverEmail={primaryCaregiver?.caregiverEmail}
+      />
+
+      {/* Semáforo Clínico */}
       <CareTrafficLight status={status} />
+
+      {/* Hub de Registro Rápido */}
+      <QuickLogHub />
 
       {!checkin ? (
         <Card className="border border-indigo-200 bg-indigo-50/60 shadow-xs">

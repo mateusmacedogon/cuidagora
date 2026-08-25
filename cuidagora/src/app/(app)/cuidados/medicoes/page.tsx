@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Activity, Droplets, Target, Trash2 } from "lucide-react";
+import { Activity, Droplets, LineChart, Target, Trash2 } from "lucide-react";
 
 import { Card, CardTitle, PageHeader } from "@/components/ui/Card";
 import { EmptyState, SafetyNotice } from "@/components/ui/Feedback";
+import { BloodPressureChart, GlucoseChart } from "@/components/charts/VitalSparklines";
 import { deleteMeasurementAction } from "@/features/care/actions";
 import { HydrationCard } from "@/features/care/components/care-widgets";
 import {
@@ -32,10 +33,23 @@ export default async function MeasurementsPage() {
       <PageHeader
         icon={<Activity className="size-7 text-teal-700" />}
         title="Medições e Sinais Vitais"
-        description="Acompanhamento sistemático de pressão arterial e glicemia capilar. Os registros servem para apoio ao diálogo com sua equipe de saúde."
+        description="Acompanhamento sistemático de pressão arterial e glicemia capilar com gráficos de tendência e histórico clínico."
       />
 
       <SafetyNotice compact />
+
+      {/* Gráficos de Tendência Visual */}
+      {bloodPressure.length > 0 && (
+        <section aria-labelledby="grafico-pressao">
+          <BloodPressureChart measurements={bloodPressure} />
+        </section>
+      )}
+
+      {glucose.length > 0 && (
+        <section aria-labelledby="grafico-glicemia">
+          <GlucoseChart measurements={glucose} />
+        </section>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

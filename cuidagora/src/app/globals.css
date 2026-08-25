@@ -165,15 +165,30 @@ body {
 }
 
 @media print {
-  .no-print {
+  .no-print,
+  nav,
+  header,
+  .skip-link,
+  button,
+  form {
     display: none !important;
   }
   body {
-    background: #ffffff;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt !important;
   }
   .card {
     break-inside: avoid;
-    border-color: #cbd5e1;
-    box-shadow: none;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  h1, h2, h3 {
+    color: #0f172a !important;
+    break-after: avoid;
+  }
+  section {
+    break-inside: avoid;
   }
 }

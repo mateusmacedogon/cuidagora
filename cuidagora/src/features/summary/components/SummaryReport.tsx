@@ -3,6 +3,7 @@ import {
   Activity,
   CheckCircle2,
   FileText,
+  HeartHandshake,
   HelpCircle,
   Pill,
   Shield,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { Card, CardTitle } from "@/components/ui/Card";
+import { BloodPressureChart, GlucoseChart } from "@/components/charts/VitalSparklines";
 import { describeRule } from "@/lib/care-status";
 import { formatDate, formatDateTime } from "@/lib/date";
 import { MOOD_LABELS, SAFETY_NOTICE, frequencyLabel, intensityLabel, type MoodValue } from "@/lib/domain";
@@ -27,7 +29,7 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="mb-6">
+    <section className="mb-6 break-inside-avoid">
       <h3 className="mb-2.5 flex items-center gap-2 border-b border-slate-200 pb-1.5 text-base sm:text-lg font-bold text-slate-900">
         <Icon className="size-5 text-teal-700 shrink-0" aria-hidden="true" />
         <span>{title}</span>
@@ -45,16 +47,40 @@ export function SummaryReport({ summary, personName }: { summary: SummaryData; p
   const { range, adherence } = summary;
 
   return (
-    <Card as="article">
-      <CardTitle
-        icon={<FileText className="size-5 text-teal-700" />}
-        description={`${range.label} · período de ${formatDate(range.fromIso)} até ${formatDate(range.toIso)}`}
-      >
-        Relatório Clínico Consolidado — {personName}
-      </CardTitle>
+    <Card as="article" className="print:border-none print:shadow-none print:p-0">
+      {/* Cabeçalho Hospitalar para Impressão */}
+      <div className="hidden print:flex items-center justify-between border-b-2 border-slate-900 pb-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="size-10 bg-teal-800 text-white rounded-lg flex items-center justify-center font-black text-xl">
+            C
+          </div>
+          <div>
+            <h1 className="text-xl font-black text-slate-900 uppercase tracking-tight">
+              CuidAgora · Relatório Clínico Ambulatorial
+            </h1>
+            <p className="text-xs text-slate-600">
+              Prontuário e Acompanhamento de Saúde Domiciliar
+            </p>
+          </div>
+        </div>
+        <div className="text-right text-xs text-slate-600">
+          <p><strong>Paciente:</strong> {personName}</p>
+          <p><strong>Emissão:</strong> {formatDate(new Date().toISOString())}</p>
+          <p><strong>Intervalo:</strong> {formatDate(range.fromIso)} a {formatDate(range.toIso)}</p>
+        </div>
+      </div>
 
-      <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-xs sm:text-sm text-slate-600">
-        <Shield className="size-4 text-teal-600 shrink-0 mt-0.5" />
+      <div className="print:hidden">
+        <CardTitle
+          icon={<FileText className="size-5 text-teal-700" />}
+          description={`${range.label} · período de ${formatDate(range.fromIso)} até ${formatDate(range.toIso)}`}
+        >
+          Relatório Clínico Consolidado — {personName}
+        </CardTitle>
+      </div>
+
+      <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-xs sm:text-sm text-slate-600 print:bg-white print:border-slate-300">
+        <Shield className="size-4 text-teal-600 shrink-0 mt-0.5 print:hidden" />
         <p>
           <strong>Finalidade Informativa:</strong> {SAFETY_NOTICE} Este documento compila registros fornecidos voluntariamente pela própria pessoa para suporte ao diálogo clínico.
         </p>
@@ -88,6 +114,47 @@ export function SummaryReport({ summary, personName }: { summary: SummaryData; p
         </p>
       </Section>
 
+      <Section title="Pressão Arterial Aferida & Curva Gráfica" icon={Activity}>
+        {summary.measurements.bloodPressure.length === 0 ? (
+          <Empty text="Nenhuma medição de pressão registrada no período." />
+        ) : (
+          <div className="space-y-4">
+            <div className="print:hidden">
+              <BloodPressureChart measurements={summary.measurements.bloodPressure} />
+            </div>
+            <ul className="list-disc pl-5 space-y-1">
+              {summary.measurements.bloodPressure.map((item) => (
+                <li key={item.id}>
+                  {formatDateTime(item.measuredAt)} — <strong>{item.systolic} por {item.diastolic} mmHg</strong>
+                  {item.notes ? ` · ${item.notes}` : ""}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </Section>
+
+      <Section title="Glicemia Capilar & Curva Gráfica" icon={Activity}>
+        {summary.measurements.glucose.length === 0 ? (
+          <Empty text="Nenhuma medição de glicemia registrada no período." />
+        ) : (
+          <div className="space-y-4">
+            <div className="print:hidden">
+              <GlucoseChart measurements={summary.measurements.glucose} />
+            </div>
+            <ul className="list-disc pl-5 space-y-1">
+              {summary.measurements.glucose.map((item) => (
+                <li key={item.id}>
+                  {formatDateTime(item.measuredAt)} — <strong>{Number(item.value)} mg/dL</strong>
+                  {item.context ? ` · contexto: ${item.context}` : ""}
+                  {item.notes ? ` · ${item.notes}` : ""}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </Section>
+
       <Section title="Registro de Sintomas e Queixas" icon={FileText}>
         {summary.symptoms.length === 0 ? (
           <Empty text="Nenhum sintoma registrado no período selecionado." />
@@ -99,37 +166,6 @@ export function SummaryReport({ summary, personName }: { summary: SummaryData; p
                 {intensityLabel(symptom.intensity)})
                 {symptom.durationMinutes ? ` · duração aproximada: ${symptom.durationMinutes} min` : ""}
                 {symptom.notes ? ` · relato: ${symptom.notes}` : ""}
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-
-      <Section title="Pressão Arterial Aferida" icon={Activity}>
-        {summary.measurements.bloodPressure.length === 0 ? (
-          <Empty text="Nenhuma medição de pressão registrada no período." />
-        ) : (
-          <ul className="list-disc pl-5 space-y-1">
-            {summary.measurements.bloodPressure.map((item) => (
-              <li key={item.id}>
-                {formatDateTime(item.measuredAt)} — <strong>{item.systolic} por {item.diastolic} mmHg</strong>
-                {item.notes ? ` · ${item.notes}` : ""}
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-
-      <Section title="Glicemia Capilar" icon={Activity}>
-        {summary.measurements.glucose.length === 0 ? (
-          <Empty text="Nenhuma medição de glicemia registrada no período." />
-        ) : (
-          <ul className="list-disc pl-5 space-y-1">
-            {summary.measurements.glucose.map((item) => (
-              <li key={item.id}>
-                {formatDateTime(item.measuredAt)} — <strong>{Number(item.value)} mg/dL</strong>
-                {item.context ? ` · contexto: ${item.context}` : ""}
-                {item.notes ? ` · ${item.notes}` : ""}
               </li>
             ))}
           </ul>
@@ -152,21 +188,7 @@ export function SummaryReport({ summary, personName }: { summary: SummaryData; p
         )}
       </Section>
 
-      <Section title="Anotações e Relatos Livres" icon={FileText}>
-        {summary.notes.length === 0 ? (
-          <Empty text="Nenhuma anotação adicional registrada." />
-        ) : (
-          <ul className="list-disc pl-5 space-y-1">
-            {summary.notes.map((note, index) => (
-              <li key={`${note.date}-${index}`}>
-                {formatDate(note.date)} — “{note.text}”
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-
-      <Section title="Caderno de Dúvidas para o Médico" icon={HelpCircle}>
+      <Section title="Caderno de Dúvidas para a Consulta" icon={HelpCircle}>
         {summary.questions.length === 0 ? (
           <Empty text="Nenhuma dúvida cadastrada para esta consulta." />
         ) : (
@@ -195,6 +217,22 @@ export function SummaryReport({ summary, personName }: { summary: SummaryData; p
           </ul>
         )}
       </Section>
+
+      {/* Espaço para Conduta Médica / Carimbo (Aparece na Impressão) */}
+      <div className="hidden print:block mt-12 pt-8 border-t border-slate-400 break-inside-avoid">
+        <h4 className="text-sm font-bold uppercase text-slate-800 mb-2">
+          Anotações & Conduta do Médico Assistente:
+        </h4>
+        <div className="h-24 border border-dashed border-slate-300 rounded-lg p-2 text-xs text-slate-400">
+          Espaço reservado para prescrições, ajustes de posologia ou exames complementares solicitados.
+        </div>
+        <div className="mt-12 flex justify-between items-end text-xs text-slate-700">
+          <div className="border-t border-slate-800 w-64 text-center pt-1">
+            Assinatura e Carimbo do Médico (CRM)
+          </div>
+          <div>Data da Avaliação: ____ / ____ / ________</div>
+        </div>
+      </div>
     </Card>
   );
 }

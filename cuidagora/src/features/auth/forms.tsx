@@ -30,9 +30,33 @@ import {
 
 export function DemoSignInButtons() {
   const [loadingRole, setLoadingRole] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleDemo = async (role: "maria" | "joao") => {
+    try {
+      setErrorMsg(null);
+      setLoadingRole(role);
+      const res = await demoSignInAction(role);
+      if (res && res.status === "error") {
+        setErrorMsg(res.message);
+        setLoadingRole(null);
+      }
+    } catch (err: any) {
+      if (err?.message !== "NEXT_REDIRECT") {
+        setErrorMsg("Não foi possível acessar a demonstração agora. Tente novamente.");
+        setLoadingRole(null);
+      }
+    }
+  };
 
   return (
     <div className="space-y-3">
+      {errorMsg ? (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
+          {errorMsg}
+        </div>
+      ) : null}
+
       <div className="relative flex items-center justify-center">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-slate-200" />
@@ -43,53 +67,45 @@ export function DemoSignInButtons() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        <form
-          action={async () => {
-            setLoadingRole("maria");
-            await demoSignInAction("maria");
-          }}
+        <button
+          type="button"
+          onClick={() => handleDemo("maria")}
+          disabled={Boolean(loadingRole)}
+          className="w-full flex items-center justify-between p-3 rounded-xl border border-teal-200 bg-teal-50/60 hover:bg-teal-100/70 hover:border-teal-300 transition-all text-left group cursor-pointer disabled:opacity-60"
         >
-          <button
-            type="submit"
-            disabled={Boolean(loadingRole)}
-            className="w-full flex items-center justify-between p-3 rounded-xl border border-teal-200 bg-teal-50/60 hover:bg-teal-100/70 hover:border-teal-300 transition-all text-left group cursor-pointer disabled:opacity-60"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="size-8 rounded-lg bg-teal-600 text-white flex items-center justify-center font-bold text-xs">
-                MA
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-900 leading-tight">Maria (Paciente)</p>
-                <p className="text-[11px] text-slate-500">Perfil titular</p>
-              </div>
+          <div className="flex items-center gap-2.5">
+            <div className="size-8 rounded-lg bg-teal-600 text-white flex items-center justify-center font-bold text-xs">
+              {loadingRole === "maria" ? "..." : "MA"}
             </div>
-            <ArrowRight className="size-4 text-teal-700 transition-transform group-hover:translate-x-0.5" />
-          </button>
-        </form>
+            <div>
+              <p className="text-xs font-bold text-slate-900 leading-tight">Maria (Paciente)</p>
+              <p className="text-[11px] text-slate-500">
+                {loadingRole === "maria" ? "Entrando..." : "Perfil titular"}
+              </p>
+            </div>
+          </div>
+          <ArrowRight className="size-4 text-teal-700 transition-transform group-hover:translate-x-0.5" />
+        </button>
 
-        <form
-          action={async () => {
-            setLoadingRole("joao");
-            await demoSignInAction("joao");
-          }}
+        <button
+          type="button"
+          onClick={() => handleDemo("joao")}
+          disabled={Boolean(loadingRole)}
+          className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100 hover:border-slate-300 transition-all text-left group cursor-pointer disabled:opacity-60"
         >
-          <button
-            type="submit"
-            disabled={Boolean(loadingRole)}
-            className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100 hover:border-slate-300 transition-all text-left group cursor-pointer disabled:opacity-60"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="size-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
-                JF
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-900 leading-tight">João (Cuidador)</p>
-                <p className="text-[11px] text-slate-500">Perfil familiar</p>
-              </div>
+          <div className="flex items-center gap-2.5">
+            <div className="size-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
+              {loadingRole === "joao" ? "..." : "JF"}
             </div>
-            <ArrowRight className="size-4 text-slate-700 transition-transform group-hover:translate-x-0.5" />
-          </button>
-        </form>
+            <div>
+              <p className="text-xs font-bold text-slate-900 leading-tight">João (Cuidador)</p>
+              <p className="text-[11px] text-slate-500">
+                {loadingRole === "joao" ? "Entrando..." : "Perfil familiar"}
+              </p>
+            </div>
+          </div>
+          <ArrowRight className="size-4 text-slate-700 transition-transform group-hover:translate-x-0.5" />
+        </button>
       </div>
     </div>
   );

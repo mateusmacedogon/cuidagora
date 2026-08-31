@@ -30,15 +30,17 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
   const raw = formToObject(formData);
   const parsed = signUpSchema.safeParse({
     ...raw,
+    email: typeof raw.email === "string" ? raw.email.trim().toLowerCase() : raw.email,
     acceptedTerms: formData.get("acceptedTerms") === "on",
   });
   if (!parsed.success) return zodErrorState(parsed.error);
 
   const { name, email, password, accountType } = parsed.data;
+  const normalizedEmail = email.trim().toLowerCase();
 
   try {
     await ensureDbReady();
-    const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1);
+    const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, normalizedEmail)).limit(1);
     if (existing.length > 0) {
       return errorState("Este e-mail já tem uma conta.", {
         email: "Já existe uma conta com este e-mail. Tente entrar.",
@@ -48,7 +50,7 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
     const passwordHash = await hashPassword(password);
     const inserted = await db
       .insert(users)
-      .values({ name, email, passwordHash, accountType })
+      .values({ name, email: normalizedEmail, passwordHash, accountType })
       .returning({ id: users.id });
 
     const user = inserted[0];
@@ -67,17 +69,22 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
 }
 
 export async function signInAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const parsed = signInSchema.safeParse(formToObject(formData));
+  const raw = formToObject(formData);
+  const parsed = signInSchema.safeParse({
+    ...raw,
+    email: typeof raw.email === "string" ? raw.email.trim().toLowerCase() : raw.email,
+  });
   if (!parsed.success) return zodErrorState(parsed.error);
 
   let successUserId: string | null = null;
+  const normalizedEmail = parsed.data.email.trim().toLowerCase();
 
   try {
     await ensureDbReady();
     const rows = await db
       .select({ id: users.id, passwordHash: users.passwordHash })
       .from(users)
-      .where(and(eq(users.email, parsed.data.email), isNull(users.deletedAt)))
+      .where(and(eq(users.email, normalizedEmail), isNull(users.deletedAt)))
       .limit(1);
 
     const account = rows[0];
@@ -106,18 +113,19 @@ export async function signInAction(_prev: ActionState, formData: FormData): Prom
   return errorState("E-mail ou senha incorretos. Confira e tente novamente.");
 }
 
-export async function demoSignInAction(role: "maria" | "joao"): Promise<void> {
-  await ensureDbReady();
-  const targetEmail = role === "joao" ? "joao@exemplo.com" : "maria@exemplo.com";
+export async function demoSignInAction(role: "maria" | "joao"): Promise<ActionState | void> {
+  let successUserId: string | null = null;
+  try {
+    await ensureDbReady();
+    const targetEmail = role === "joao" ? "joao@exemplo.com" : "maria@exemplo.com";
 
-  let rows = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(and(eq(users.email, targetEmail), isNull(users.deletedAt)))
-    .limit(1);
+    let rows = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.email, targetEmail), isNull(users.deletedAt)))
+      .limit(1);
 
-  if (!rows[0]) {
-    try {
+    if (!rows[0]) {
       const name =
         role === "joao"
           ? "João Fictício (cuidador)"
@@ -136,13 +144,20 @@ export async function demoSignInAction(role: "maria" | "joao"): Promise<void> {
           .onConflictDoNothing();
         rows = inserted;
       }
-    } catch (e) {
-      console.warn("Aviso ao criar usuário de demonstração sob demanda:", e);
     }
+
+    if (rows[0]) {
+      await createSession(rows[0].id);
+      successUserId = rows[0].id;
+    } else {
+      return errorState("Não foi possível carregar a conta de demonstração.");
+    }
+  } catch (e) {
+    console.error("Erro ao autenticar demonstração:", e);
+    return errorState("Falha temporária ao conectar a conta de demonstração.");
   }
 
-  if (rows[0]) {
-    await createSession(rows[0].id);
+  if (successUserId) {
     redirect("/inicio");
   }
 }
@@ -160,15 +175,21 @@ export async function requestPasswordResetAction(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const parsed = forgotPasswordSchema.safeParse(formToObject(formData));
+  const raw = formToObject(formData);
+  const parsed = forgotPasswordSchema.safeParse({
+    ...raw,
+    email: typeof raw.email === "string" ? raw.email.trim().toLowerCase() : raw.email,
+  });
   if (!parsed.success) return zodErrorState(parsed.error);
+
+  const normalizedEmail = parsed.data.email.trim().toLowerCase();
 
   try {
     await ensureDbReady();
     const rows = await db
       .select({ id: users.id })
       .from(users)
-      .where(and(eq(users.email, parsed.data.email), isNull(users.deletedAt)))
+      .where(and(eq(users.email, normalizedEmail), isNull(users.deletedAt)))
       .limit(1);
 
     const account = rows[0];

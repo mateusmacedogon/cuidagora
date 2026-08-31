@@ -3,16 +3,24 @@ import { Pool } from "pg";
 import * as schema from "./schema";
 import { pglite, pgliteDb, ensurePGliteReady } from "./memory-fallback";
 
-const databaseUrl =
+function isPlaceholder(url?: string): boolean {
+  if (!url) return true;
+  return (
+    url.includes("ep-cool-cloud") ||
+    url.includes("default:default") ||
+    url.includes("placeholder") ||
+    url.includes("user:password")
+  );
+}
+
+const rawDatabaseUrl =
   process.env.POSTGRES_URL ||
   process.env.DATABASE_URL ||
   process.env.POSTGRES_PRISMA_URL ||
   process.env.POSTGRES_URL_NON_POOLING;
 
-const isRemotePostgres =
-  Boolean(databaseUrl) &&
-  !databaseUrl?.includes("127.0.0.1") &&
-  !databaseUrl?.includes("localhost");
+const databaseUrl = isPlaceholder(rawDatabaseUrl) ? undefined : rawDatabaseUrl;
+const isConfiguredPostgres = Boolean(databaseUrl);
 
 const globalForDb = globalThis as typeof globalThis & {
   __cuidagoraDb?: NodePgDatabase<typeof schema>;
@@ -24,7 +32,7 @@ function initDb(): { db: NodePgDatabase<typeof schema>; pool: any } {
     return { db: globalForDb.__cuidagoraDb, pool: globalForDb.__cuidagoraPool };
   }
 
-  if (isRemotePostgres && databaseUrl) {
+  if (isConfiguredPostgres && databaseUrl) {
     const isLocal =
       databaseUrl.includes("127.0.0.1") || databaseUrl.includes("localhost");
 
@@ -47,16 +55,16 @@ function initDb(): { db: NodePgDatabase<typeof schema>; pool: any } {
 }
 
 export async function ensureDbReady() {
-  if (isRemotePostgres) return;
+  if (isConfiguredPostgres) return;
   await ensurePGliteReady();
 }
 
 export function isRemoteDatabase(): boolean {
-  return isRemotePostgres;
+  return isConfiguredPostgres;
 }
 
 export function getDatabaseProvider(): "postgresql" | "pglite" {
-  return isRemotePostgres ? "postgresql" : "pglite";
+  return isConfiguredPostgres ? "postgresql" : "pglite";
 }
 
 export const { db, pool } = initDb();

@@ -1,6 +1,8 @@
 import { drizzle as drizzlePg, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "./schema";
+import { SCHEMA_SQL } from "./schema-sql";
+import { seedDemoData } from "./seed-data";
 import { pglite, pgliteDb, ensurePGliteReady } from "./memory-fallback";
 
 function isPlaceholder(url?: string): boolean {
@@ -25,6 +27,7 @@ const isConfiguredPostgres = Boolean(databaseUrl);
 const globalForDb = globalThis as typeof globalThis & {
   __cuidagoraDb?: NodePgDatabase<typeof schema>;
   __cuidagoraPool?: any;
+  __cuidagoraPgInitPromise?: Promise<void>;
 };
 
 function initDb(): { db: NodePgDatabase<typeof schema>; pool: any } {
@@ -54,8 +57,47 @@ function initDb(): { db: NodePgDatabase<typeof schema>; pool: any } {
   return { db: pgliteDb as unknown as NodePgDatabase<typeof schema>, pool: pglite };
 }
 
+async function ensurePostgresReady(poolInstance: Pool): Promise<void> {
+  if (globalForDb.__cuidagoraPgInitPromise) {
+    return globalForDb.__cuidagoraPgInitPromise;
+  }
+
+  globalForDb.__cuidagoraPgInitPromise = (async () => {
+    try {
+      try {
+        await poolInstance.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto";');
+      } catch {
+        // Ignora caso o banco não permita criar extensões explicitamente
+      }
+
+      const cleanSql = SCHEMA_SQL.replace(/CREATE EXTENSION[^\;]+\;/gi, "");
+      await poolInstance.query(cleanSql);
+
+      const res = await poolInstance.query(
+        "SELECT id FROM users WHERE email = $1 LIMIT 1",
+        ["maria@exemplo.com"],
+      );
+      if (!res.rows || res.rows.length === 0) {
+        await seedDemoData(poolInstance);
+      }
+    } catch (err) {
+      console.error("Aviso ao auto-inicializar PostgreSQL:", err);
+      globalForDb.__cuidagoraPgInitPromise = undefined;
+      throw err;
+    }
+  })();
+
+  return globalForDb.__cuidagoraPgInitPromise;
+}
+
 export async function ensureDbReady() {
-  if (isConfiguredPostgres) return;
+  if (isConfiguredPostgres) {
+    const { pool: poolInstance } = initDb();
+    if (poolInstance && typeof poolInstance.query === "function") {
+      await ensurePostgresReady(poolInstance);
+      return;
+    }
+  }
   await ensurePGliteReady();
 }
 

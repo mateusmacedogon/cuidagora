@@ -1,5 +1,8 @@
 import { hashPassword } from "@/lib/auth/password";
 
+export const MARIA_DEMO_ID = "a0000000-0000-4000-8000-000000000001";
+export const JOAO_DEMO_ID = "a0000000-0000-4000-8000-000000000002";
+
 const OFFSET = "-03:00";
 function todayIso(shiftDays = 0): string {
   const now = new Date();
@@ -21,29 +24,25 @@ export async function seedDemoData(client: {
 }): Promise<void> {
   const password = await hashPassword("cuidagora123");
 
-  // 1. Maria (Paciente)
+  // 1. Maria (Paciente) com UUID determinístico
   const ownerRes = await client.query(
-    "INSERT INTO users (name, email, password_hash, account_type) VALUES ($1,$2,$3,$4) ON CONFLICT (email) DO NOTHING RETURNING id",
-    ["Maria Aparecida (demonstração)", "maria@exemplo.com", password, "person"],
+    `INSERT INTO users (id, name, email, password_hash, account_type) 
+     VALUES ($1,$2,$3,$4,$5) 
+     ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name, password_hash = EXCLUDED.password_hash 
+     RETURNING id`,
+    [MARIA_DEMO_ID, "Maria Aparecida (demonstração)", "maria@exemplo.com", password, "person"],
   );
-  let ownerId = ownerRes.rows?.[0]?.id;
-  if (!ownerId) {
-    const existing = await client.query("SELECT id FROM users WHERE email = $1 LIMIT 1", ["maria@exemplo.com"]);
-    ownerId = existing.rows?.[0]?.id;
-  }
+  let ownerId = ownerRes.rows?.[0]?.id || MARIA_DEMO_ID;
 
-  // 2. João (Cuidador)
+  // 2. João (Cuidador) com UUID determinístico
   const caregiverRes = await client.query(
-    "INSERT INTO users (name, email, password_hash, account_type) VALUES ($1,$2,$3,$4) ON CONFLICT (email) DO NOTHING RETURNING id",
-    ["João Fictício (cuidador)", "joao@exemplo.com", password, "caregiver"],
+    `INSERT INTO users (id, name, email, password_hash, account_type) 
+     VALUES ($1,$2,$3,$4,$5) 
+     ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name, password_hash = EXCLUDED.password_hash 
+     RETURNING id`,
+    [JOAO_DEMO_ID, "João Fictício (cuidador)", "joao@exemplo.com", password, "caregiver"],
   );
-  let caregiverId = caregiverRes.rows?.[0]?.id;
-  if (!caregiverId) {
-    const existing = await client.query("SELECT id FROM users WHERE email = $1 LIMIT 1", ["joao@exemplo.com"]);
-    caregiverId = existing.rows?.[0]?.id;
-  }
-
-  if (!ownerId || !caregiverId) return;
+  let caregiverId = caregiverRes.rows?.[0]?.id || JOAO_DEMO_ID;
 
   for (const id of [ownerId, caregiverId]) {
     await client.query(
@@ -234,7 +233,7 @@ export async function seedDemoData(client: {
   if (appointmentId) {
     for (const question of [
       "Posso manter o ritmo de caminhadas diárias de 20 minutos?",
-      "A sensação leve de cansaço tem relação com o ajuste de dose?",
+      "A sensação leve de cansaço tem relação com o status do tratamento?",
       "Quais exames de rotina precisarei repetir no próximo semestre?",
     ]) {
       await client.query(

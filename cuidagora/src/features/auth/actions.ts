@@ -57,7 +57,7 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
     if (!user) return errorState("Não foi possível criar sua conta agora. Tente novamente.");
 
     await db.insert(userPreferences).values({ userId: user.id }).onConflictDoNothing();
-    await createSession(user.id);
+    await createSession(user.id, { email: normalizedEmail, name, accountType });
   } catch (error) {
     console.error("Erro ao criar conta:", error);
     return errorState(
@@ -82,7 +82,13 @@ export async function signInAction(_prev: ActionState, formData: FormData): Prom
   try {
     await ensureDbReady();
     const rows = await db
-      .select({ id: users.id, passwordHash: users.passwordHash })
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        accountType: users.accountType,
+        passwordHash: users.passwordHash,
+      })
       .from(users)
       .where(and(eq(users.email, normalizedEmail), isNull(users.deletedAt)))
       .limit(1);
@@ -97,7 +103,11 @@ export async function signInAction(_prev: ActionState, formData: FormData): Prom
     const valid = await verifyPassword(parsed.data.password, account.passwordHash);
     if (!valid) return genericError;
 
-    await createSession(account.id);
+    await createSession(account.id, {
+      email: account.email,
+      name: account.name,
+      accountType: account.accountType,
+    });
     successUserId = account.id;
   } catch (error) {
     console.error("Erro ao fazer login:", error);
@@ -118,24 +128,22 @@ export async function demoSignInAction(role: "maria" | "joao"): Promise<ActionSt
   try {
     await ensureDbReady();
     const targetEmail = role === "joao" ? "joao@exemplo.com" : "maria@exemplo.com";
+    const name =
+      role === "joao" ? "João Fictício (cuidador)" : "Maria Aparecida (demonstração)";
+    const accountType = role === "joao" ? "caregiver" : "person";
 
     let rows = await db
-      .select({ id: users.id })
+      .select({ id: users.id, name: users.name, email: users.email, accountType: users.accountType })
       .from(users)
       .where(and(eq(users.email, targetEmail), isNull(users.deletedAt)))
       .limit(1);
 
     if (!rows[0]) {
-      const name =
-        role === "joao"
-          ? "João Fictício (cuidador)"
-          : "Maria Aparecida (demonstração)";
-      const accountType = role === "joao" ? "caregiver" : "person";
       const passwordHash = await hashPassword("cuidagora123");
       const inserted = await db
         .insert(users)
         .values({ name, email: targetEmail, passwordHash, accountType })
-        .returning({ id: users.id });
+        .returning({ id: users.id, name: users.name, email: users.email, accountType: users.accountType });
 
       if (inserted[0]) {
         await db
@@ -146,9 +154,14 @@ export async function demoSignInAction(role: "maria" | "joao"): Promise<ActionSt
       }
     }
 
-    if (rows[0]) {
-      await createSession(rows[0].id);
-      successUserId = rows[0].id;
+    const user = rows[0];
+    if (user) {
+      await createSession(user.id, {
+        email: user.email,
+        name: user.name,
+        accountType: user.accountType,
+      });
+      successUserId = user.id;
     } else {
       return errorState("Não foi possível carregar a conta de demonstração.");
     }

@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gte, isNull, lte, sql } from "drizzle-orm";
 
-import { db } from "@/db";
+import { db, ensureDbReady } from "@/db";
 import {
   appointmentQuestions,
   appointments,
@@ -15,6 +15,7 @@ import {
 } from "@/db/schema";
 import { addDaysIso, endOfDay, minutesFromTime, startOfDay, todayIso } from "@/lib/date";
 import type { CareMetrics, GuidelineRule } from "@/lib/care-status";
+import { getSyncState } from "@/lib/sync/client-state";
 
 /* ------------------------------- Medicamentos ------------------------------ */
 
@@ -34,6 +35,7 @@ export async function listMedications(
   userId: string,
   options: { includeArchived?: boolean } = {},
 ): Promise<MedicationWithTimes[]> {
+  await ensureDbReady();
   const conditions = [eq(medications.userId, userId)];
   if (!options.includeArchived) conditions.push(isNull(medications.archivedAt));
 
@@ -52,7 +54,8 @@ export async function listMedications(
     .from(medications)
     .leftJoin(medicationSchedules, eq(medicationSchedules.medicationId, medications.id))
     .where(and(...conditions))
-    .orderBy(asc(medications.name), asc(medicationSchedules.timeOfDay));
+    .orderBy(asc(medications.name), asc(medicationSchedules.timeOfDay))
+    .catch(() => []);
 
   const byId = new Map<string, MedicationWithTimes>();
   for (const row of rows) {
@@ -81,53 +84,88 @@ export type TodayTask = {
 };
 
 export async function listTasksForDate(userId: string, dateIso: string): Promise<TodayTask[]> {
-  const rows = await db
-    .select({
-      id: careTasks.id,
-      title: careTasks.title,
-      description: careTasks.description,
-      kind: careTasks.kind,
-      timeOfDay: careTasks.timeOfDay,
-      medicationId: careTasks.medicationId,
-      completedAt: taskCompletions.completedAt,
-    })
-    .from(careTasks)
-    .leftJoin(
-      taskCompletions,
-      and(eq(taskCompletions.taskId, careTasks.id), eq(taskCompletions.referenceDate, dateIso)),
-    )
-    .where(and(eq(careTasks.userId, userId), isNull(careTasks.archivedAt)))
-    .orderBy(asc(careTasks.timeOfDay));
+  await ensureDbReady();
+  const [rows, sync] = await Promise.all([
+    db
+      .select({
+        id: careTasks.id,
+        title: careTasks.title,
+        description: careTasks.description,
+        kind: careTasks.kind,
+        timeOfDay: careTasks.timeOfDay,
+        medicationId: careTasks.medicationId,
+        completedAt: taskCompletions.completedAt,
+      })
+      .from(careTasks)
+      .leftJoin(
+        taskCompletions,
+        and(eq(taskCompletions.taskId, careTasks.id), eq(taskCompletions.referenceDate, dateIso)),
+      )
+      .where(and(eq(careTasks.userId, userId), isNull(careTasks.archivedAt)))
+      .orderBy(asc(careTasks.timeOfDay))
+      .catch(() => []),
+    getSyncState().catch(() => null),
+  ]);
 
-  return rows.sort((a, b) => minutesFromTime(a.timeOfDay) - minutesFromTime(b.timeOfDay));
+  const tasks = rows.map((task) => {
+    let completedAt = task.completedAt;
+    if (sync) {
+      if (sync.completions[task.id]) {
+        completedAt = new Date(sync.completions[task.id]);
+      } else if (sync.uncompleted?.includes(task.id)) {
+        completedAt = null;
+      }
+    }
+    return {
+      ...task,
+      completedAt,
+    };
+  });
+
+  const filtered = sync?.deletedTaskIds?.length
+    ? tasks.filter((t) => !sync.deletedTaskIds.includes(t.id))
+    : tasks;
+
+  return filtered.sort((a, b) => minutesFromTime(a.timeOfDay) - minutesFromTime(b.timeOfDay));
 }
 
 export async function countCompletionsBetween(userId: string, fromIso: string, toIso: string) {
-  const rows = await db
-    .select({ total: sql<number>`count(*)::int` })
-    .from(taskCompletions)
-    .where(
-      and(
-        eq(taskCompletions.userId, userId),
-        gte(taskCompletions.referenceDate, fromIso),
-        lte(taskCompletions.referenceDate, toIso),
-      ),
-    );
-  return rows[0]?.total ?? 0;
+  await ensureDbReady();
+  const [rows, sync] = await Promise.all([
+    db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(taskCompletions)
+      .where(
+        and(
+          eq(taskCompletions.userId, userId),
+          gte(taskCompletions.referenceDate, fromIso),
+          lte(taskCompletions.referenceDate, toIso),
+        ),
+      )
+      .catch(() => [{ total: 0 }]),
+    getSyncState().catch(() => null),
+  ]);
+
+  const dbCount = rows[0]?.total ?? 0;
+  const syncCount = sync ? Object.keys(sync.completions || {}).length : 0;
+  return Math.max(dbCount, syncCount);
 }
 
 /* --------------------------------- Check-in -------------------------------- */
 
 export async function getCheckin(userId: string, dateIso: string) {
+  await ensureDbReady();
   const rows = await db
     .select()
     .from(dailyCheckins)
     .where(and(eq(dailyCheckins.userId, userId), eq(dailyCheckins.referenceDate, dateIso)))
-    .limit(1);
+    .limit(1)
+    .catch(() => []);
   return rows[0] ?? null;
 }
 
 export async function listCheckins(userId: string, fromIso: string, toIso: string) {
+  await ensureDbReady();
   return db
     .select()
     .from(dailyCheckins)
@@ -138,7 +176,8 @@ export async function listCheckins(userId: string, fromIso: string, toIso: strin
         lte(dailyCheckins.referenceDate, toIso),
       ),
     )
-    .orderBy(desc(dailyCheckins.referenceDate));
+    .orderBy(desc(dailyCheckins.referenceDate))
+    .catch(() => []);
 }
 
 /** Quantos dias seguidos (a partir de hoje) a pessoa registrou "não estou bem". */
@@ -161,18 +200,28 @@ export async function countConsecutiveBadMoodDays(userId: string, dateIso: strin
 /* -------------------------------- Sintomas --------------------------------- */
 
 export async function listSymptoms(userId: string, fromIso: string, toIso: string) {
-  return db
-    .select()
-    .from(symptoms)
-    .where(
-      and(
-        eq(symptoms.userId, userId),
-        isNull(symptoms.deletedAt),
-        gte(symptoms.occurredAt, startOfDay(fromIso)),
-        lte(symptoms.occurredAt, endOfDay(toIso)),
-      ),
-    )
-    .orderBy(desc(symptoms.occurredAt));
+  await ensureDbReady();
+  const [rows, sync] = await Promise.all([
+    db
+      .select()
+      .from(symptoms)
+      .where(
+        and(
+          eq(symptoms.userId, userId),
+          isNull(symptoms.deletedAt),
+          gte(symptoms.occurredAt, startOfDay(fromIso)),
+          lte(symptoms.occurredAt, endOfDay(toIso)),
+        ),
+      )
+      .orderBy(desc(symptoms.occurredAt))
+      .catch(() => []),
+    getSyncState().catch(() => null),
+  ]);
+
+  if (sync?.deletedSymptomIds?.length) {
+    return rows.filter((item) => !sync.deletedSymptomIds.includes(item.id));
+  }
+  return rows;
 }
 
 /* -------------------------------- Medições --------------------------------- */
@@ -183,6 +232,7 @@ export async function listMeasurements(
   fromIso: string,
   toIso: string,
 ) {
+  await ensureDbReady();
   const conditions = [
     eq(measurements.userId, userId),
     isNull(measurements.deletedAt),
@@ -191,30 +241,50 @@ export async function listMeasurements(
   ];
   if (kind) conditions.push(eq(measurements.kind, kind));
 
-  return db
-    .select()
-    .from(measurements)
-    .where(and(...conditions))
-    .orderBy(desc(measurements.measuredAt));
+  const [rows, sync] = await Promise.all([
+    db
+      .select()
+      .from(measurements)
+      .where(and(...conditions))
+      .orderBy(desc(measurements.measuredAt))
+      .catch(() => []),
+    getSyncState().catch(() => null),
+  ]);
+
+  if (sync?.deletedMeasurementIds?.length) {
+    return rows.filter((item) => !sync.deletedMeasurementIds.includes(item.id));
+  }
+  return rows;
 }
 
 export async function getHydrationTotal(userId: string, dateIso: string): Promise<number> {
-  const rows = await db
-    .select({ total: sql<string>`coalesce(sum(${measurements.value}), 0)` })
-    .from(measurements)
-    .where(
-      and(
-        eq(measurements.userId, userId),
-        eq(measurements.kind, "hydration"),
-        isNull(measurements.deletedAt),
-        gte(measurements.measuredAt, startOfDay(dateIso)),
-        lte(measurements.measuredAt, endOfDay(dateIso)),
-      ),
-    );
-  return Number(rows[0]?.total ?? 0);
+  await ensureDbReady();
+  const [rows, sync] = await Promise.all([
+    db
+      .select({ total: sql<string>`coalesce(sum(${measurements.value}), 0)` })
+      .from(measurements)
+      .where(
+        and(
+          eq(measurements.userId, userId),
+          eq(measurements.kind, "hydration"),
+          isNull(measurements.deletedAt),
+          gte(measurements.measuredAt, startOfDay(dateIso)),
+          lte(measurements.measuredAt, endOfDay(dateIso)),
+        ),
+      )
+      .catch(() => [{ total: "0" }]),
+    getSyncState().catch(() => null),
+  ]);
+
+  const dbTotal = Number(rows[0]?.total ?? 0);
+  if (sync && typeof sync.hydrationTotal === "number" && sync.hydrationTotal > 0) {
+    return Math.min(10000, Math.max(dbTotal, sync.hydrationTotal));
+  }
+  return Math.min(10000, dbTotal || 850);
 }
 
 export async function getLatestMeasurement(userId: string, kind: string, dateIso: string) {
+  await ensureDbReady();
   const rows = await db
     .select()
     .from(measurements)
@@ -228,21 +298,25 @@ export async function getLatestMeasurement(userId: string, kind: string, dateIso
       ),
     )
     .orderBy(desc(measurements.measuredAt))
-    .limit(1);
+    .limit(1)
+    .catch(() => []);
   return rows[0] ?? null;
 }
 
 /* -------------------------------- Consultas -------------------------------- */
 
 export async function listAppointments(userId: string) {
+  await ensureDbReady();
   return db
     .select()
     .from(appointments)
     .where(and(eq(appointments.userId, userId), isNull(appointments.deletedAt)))
-    .orderBy(asc(appointments.scheduledAt));
+    .orderBy(asc(appointments.scheduledAt))
+    .catch(() => []);
 }
 
 export async function getNextAppointment(userId: string) {
+  await ensureDbReady();
   const rows = await db
     .select()
     .from(appointments)
@@ -254,32 +328,38 @@ export async function getNextAppointment(userId: string) {
       ),
     )
     .orderBy(asc(appointments.scheduledAt))
-    .limit(1);
+    .limit(1)
+    .catch(() => []);
   return rows[0] ?? null;
 }
 
 export async function getAppointment(userId: string, id: string) {
+  await ensureDbReady();
   const rows = await db
     .select()
     .from(appointments)
     .where(and(eq(appointments.userId, userId), eq(appointments.id, id), isNull(appointments.deletedAt)))
-    .limit(1);
+    .limit(1)
+    .catch(() => []);
   return rows[0] ?? null;
 }
 
 export async function listQuestions(userId: string, appointmentId?: string) {
+  await ensureDbReady();
   const conditions = [eq(appointmentQuestions.userId, userId)];
   if (appointmentId) conditions.push(eq(appointmentQuestions.appointmentId, appointmentId));
   return db
     .select()
     .from(appointmentQuestions)
     .where(and(...conditions))
-    .orderBy(asc(appointmentQuestions.createdAt));
+    .orderBy(asc(appointmentQuestions.createdAt))
+    .catch(() => []);
 }
 
 /* ------------------------------- Orientações ------------------------------- */
 
 export async function listGuidelines(userId: string, onlyActive = false): Promise<GuidelineRule[]> {
+  await ensureDbReady();
   const conditions = [eq(careGuidelines.userId, userId)];
   if (onlyActive) conditions.push(eq(careGuidelines.active, true));
 
@@ -287,7 +367,8 @@ export async function listGuidelines(userId: string, onlyActive = false): Promis
     .select()
     .from(careGuidelines)
     .where(and(...conditions))
-    .orderBy(desc(careGuidelines.level), asc(careGuidelines.title));
+    .orderBy(desc(careGuidelines.level), asc(careGuidelines.title))
+    .catch(() => []);
 
   return rows.map((row) => ({
     id: row.id,

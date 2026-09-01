@@ -33,6 +33,7 @@ import {
 } from "@/lib/validation";
 import { MOOD_LABELS, intensityLabel, measurementMeta, type MoodValue } from "@/lib/domain";
 import { formatTime, todayIso, toInstant } from "@/lib/date";
+import { getSyncState, saveSyncState } from "@/lib/sync/client-state";
 
 function refreshCareViews() {
   revalidatePath("/inicio");
@@ -87,7 +88,6 @@ export async function saveMedicationAction(
         .insert(medicationSchedules)
         .values(data.times.map((time) => ({ medicationId: data.id as string, timeOfDay: time })));
 
-      // Atualiza tarefas existentes vinculadas ao medicamento
       await db
         .update(careTasks)
         .set({
@@ -219,11 +219,26 @@ export async function toggleTaskAction(formData: FormData): Promise<void> {
   const referenceDate = String(formData.get("date") ?? todayIso());
   if (!taskId) return;
 
+  // 1. Sincroniza estado imediato (funciona através de todos os lambdas serverless)
+  const sync = await getSyncState();
+  if (done) {
+    sync.completions[taskId] = new Date().toISOString();
+    sync.uncompleted = (sync.uncompleted || []).filter((id) => id !== taskId);
+  } else {
+    delete sync.completions[taskId];
+    if (!sync.uncompleted.includes(taskId)) {
+      sync.uncompleted.push(taskId);
+    }
+  }
+  await saveSyncState(sync);
+
+  // 2. Persiste no banco de dados
   const owned = await db
     .select({ id: careTasks.id, title: careTasks.title })
     .from(careTasks)
     .where(eq(careTasks.id, taskId))
-    .limit(1);
+    .limit(1)
+    .catch(() => []);
   const task = owned[0];
 
   if (done) {
@@ -231,7 +246,9 @@ export async function toggleTaskAction(formData: FormData): Promise<void> {
     await db
       .insert(taskCompletions)
       .values({ taskId, userId: user.id, referenceDate, completedAt: now })
-      .onConflictDoNothing();
+      .onConflictDoNothing()
+      .catch(() => {});
+
     if (task) {
       await addTimelineEvent({
         userId: user.id,
@@ -240,12 +257,13 @@ export async function toggleTaskAction(formData: FormData): Promise<void> {
         description: `Registrado às ${formatTime(now)}`,
         occurredAt: now,
         referenceId: taskId,
-      });
+      }).catch(() => {});
     }
   } else {
     await db
       .delete(taskCompletions)
-      .where(and(eq(taskCompletions.taskId, taskId), eq(taskCompletions.referenceDate, referenceDate)));
+      .where(and(eq(taskCompletions.taskId, taskId), eq(taskCompletions.referenceDate, referenceDate)))
+      .catch(() => {});
   }
 
   refreshCareViews();
@@ -256,15 +274,23 @@ export async function archiveTaskAction(formData: FormData): Promise<void> {
   await ensureDbReady();
   const id = String(formData.get("id") ?? "");
   if (!id) return;
-  
-  await db
-    .delete(careTasks)
-    .where(eq(careTasks.id, id));
+
+  // 1. Sincroniza estado excluído
+  const sync = await getSyncState();
+  if (!sync.deletedTaskIds.includes(id)) {
+    sync.deletedTaskIds.push(id);
+    delete sync.completions[id];
+    await saveSyncState(sync);
+  }
+
+  // 2. Exclui do banco
+  await db.delete(careTasks).where(eq(careTasks.id, id)).catch(() => {});
   await db
     .update(careTasks)
     .set({ archivedAt: new Date(), updatedAt: new Date() })
-    .where(eq(careTasks.id, id));
-  
+    .where(eq(careTasks.id, id))
+    .catch(() => {});
+
   refreshCareViews();
 }
 
@@ -367,13 +393,18 @@ export async function deleteSymptomAction(formData: FormData): Promise<void> {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
 
-  await db
-    .delete(symptoms)
-    .where(eq(symptoms.id, id));
+  const sync = await getSyncState();
+  if (!sync.deletedSymptomIds.includes(id)) {
+    sync.deletedSymptomIds.push(id);
+    await saveSyncState(sync);
+  }
+
+  await db.delete(symptoms).where(eq(symptoms.id, id)).catch(() => {});
   await db
     .update(symptoms)
     .set({ deletedAt: new Date() })
-    .where(eq(symptoms.id, id));
+    .where(eq(symptoms.id, id))
+    .catch(() => {});
 
   refreshCareViews();
 }
@@ -460,20 +491,31 @@ export async function addHydrationAction(formData: FormData): Promise<void> {
   const parsed = hydrationSchema.safeParse({ amountMl: formData.get("amountMl") });
   if (!parsed.success) return;
 
+  const amount = parsed.data.amountMl;
+
+  // 1. Sincroniza hidratação acumulada (evita saltos entre instâncias serverless)
+  const sync = await getSyncState();
+  const newTotal = Math.min(10000, (sync.hydrationTotal || 0) + amount);
+  sync.hydrationTotal = newTotal;
+  await saveSyncState(sync);
+
+  // 2. Persiste medição
   const now = new Date();
   await db.insert(measurements).values({
     userId: user.id,
     kind: "hydration",
-    value: String(parsed.data.amountMl),
+    value: String(amount),
     unit: "ml",
     measuredAt: now,
-  });
+  }).catch(() => {});
+
   await addTimelineEvent({
     userId: user.id,
     category: "measurement",
-    title: `Água: ${parsed.data.amountMl} ml`,
+    title: `Água: ${amount} ml`,
     occurredAt: now,
-  });
+  }).catch(() => {});
+
   refreshCareViews();
 }
 
@@ -484,13 +526,18 @@ export async function deleteMeasurementAction(formData: FormData): Promise<void>
   const kind = String(formData.get("kind") ?? "");
   if (!id) return;
 
-  await db
-    .delete(measurements)
-    .where(eq(measurements.id, id));
+  const sync = await getSyncState();
+  if (!sync.deletedMeasurementIds.includes(id)) {
+    sync.deletedMeasurementIds.push(id);
+    await saveSyncState(sync);
+  }
+
+  await db.delete(measurements).where(eq(measurements.id, id)).catch(() => {});
   await db
     .update(measurements)
     .set({ deletedAt: new Date() })
-    .where(eq(measurements.id, id));
+    .where(eq(measurements.id, id))
+    .catch(() => {});
 
   void measurementMeta(kind);
   refreshCareViews();

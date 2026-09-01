@@ -1,5 +1,6 @@
 # CuidAgora — Gestão Humanizada e Acessível de Cuidados de Saúde
 
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 [![Vercel](https://img.shields.io/badge/Vercel-Deployed-black?style=flat&logo=vercel)](https://vercel.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-16.2.6-black?style=flat&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2.6-blue?style=flat&logo=react)](https://react.dev/)
@@ -38,6 +39,7 @@
 ## Deploy no Vercel
 
 O projeto está pronto para publicação instantânea na **Vercel**:
+
 1. Conecte o repositório na **Vercel** (`mateusmacedogon/cuidagora`).
 2. Clique em **Deploy**.
 3. O build roda de forma automatizada com fallback em memória pré-populado ou conectado ao **Vercel Postgres** / **Neon**.
@@ -101,14 +103,14 @@ A adesão a tratamentos contínuos e o acompanhamento de sinais vitais costumam 
 
 O CuidAgora foi planejado desde o primeiro rascunho com conformidade **WCAG 2.1 nível AA**, integrando recursos diretamente no menu de acessibilidade e salvando as preferências no perfil do usuário:
 
-| Recurso | Como Funciona | Impacto |
-| :--- | :--- | :--- |
-| **Modo Idoso** | Ativa a flag `data-elder="true"`, aumentando a tipografia base de `17px` para `21px` e expandindo proporcionalmente todos os espaçamentos e alvos de toque (`rem`). | Facilita a leitura para pessoas com presbiopia ou baixa visão. |
-| **Alto Contraste** | Ativa a flag `data-contrast="true"`, redefinindo a paleta de cores para contraste máximo (`#000000` em `#ffffff` e bordas grossas de 2px). | Atende usuários com catarata, daltonismo ou dificuldades de diferenciação cromática. |
-| **Modo Simplificado** | Ativa a flag `data-simple="true"`, ocultando elementos secundários e expandindo a altura mínima de botões e links para `3.5rem` (56px). | Reduz a carga cognitiva e evita toques acidentais em telas sensíveis ao toque. |
-| **Leitura em Voz Alta** | Utiliza a **Web Speech API (SpeechSynthesis)** no componente `<SpeakButton />` para vocalizar resumos do dia, mensagens e orientações. | Proporciona autonomia para pessoas não alfabetizadas ou com deficiência visual severa. |
-| **Entrada por Voz** | Componente `<VoiceTextArea />` que utiliza a **Web Speech API (SpeechRecognition)** para transcrição direta de relatos e sintomas. | Elimina a barreira de digitação em teclados virtuais pequenos. |
-| **Foco e Teclado** | Foco visível de 3px com contorno contrastante em todos os elementos interativos (`:focus-visible`) e _Skip Link_ para navegação rápida. | Totalmente operável via teclado e leitores de tela externos (NVDA, TalkBack, VoiceOver). |
+| Recurso                 | Como Funciona                                                                                                                                                       | Impacto                                                                                  |
+| :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------- |
+| **Modo Idoso**          | Ativa a flag `data-elder="true"`, aumentando a tipografia base de `17px` para `21px` e expandindo proporcionalmente todos os espaçamentos e alvos de toque (`rem`). | Facilita a leitura para pessoas com presbiopia ou baixa visão.                           |
+| **Alto Contraste**      | Ativa a flag `data-contrast="true"`, redefinindo a paleta de cores para contraste máximo (`#000000` em `#ffffff` e bordas grossas de 2px).                          | Atende usuários com catarata, daltonismo ou dificuldades de diferenciação cromática.     |
+| **Modo Simplificado**   | Ativa a flag `data-simple="true"`, ocultando elementos secundários e expandindo a altura mínima de botões e links para `3.5rem` (56px).                             | Reduz a carga cognitiva e evita toques acidentais em telas sensíveis ao toque.           |
+| **Leitura em Voz Alta** | Utiliza a **Web Speech API (SpeechSynthesis)** no componente `<SpeakButton />` para vocalizar resumos do dia, mensagens e orientações.                              | Proporciona autonomia para pessoas não alfabetizadas ou com deficiência visual severa.   |
+| **Entrada por Voz**     | Componente `<VoiceTextArea />` que utiliza a **Web Speech API (SpeechRecognition)** para transcrição direta de relatos e sintomas.                                  | Elimina a barreira de digitação em teclados virtuais pequenos.                           |
+| **Foco e Teclado**      | Foco visível de 3px com contorno contrastante em todos os elementos interativos (`:focus-visible`) e _Skip Link_ para navegação rápida.                             | Totalmente operável via teclado e leitores de tela externos (NVDA, TalkBack, VoiceOver). |
 
 ---
 
@@ -363,10 +365,10 @@ erDiagram
 
 Ao rodar o script `npm run db:seed`, duas contas pré-configuradas com dados clínicos fictícios são criadas:
 
-| Perfil | E-mail | Senha Padrão | Descrição |
-| :--- | :--- | :--- | :--- |
-| **Titular (Paciente)** | `maria@exemplo.com` | `cuidagora123` | Conta com histórico completo de 30 dias: medicamentos, tarefas, medições de pressão/glicemia, hidratação, check-ins e orientações do semáforo cadastradas. |
-| **Cuidador Autorizado** | `joao@exemplo.com` | `cuidagora123` | Conta de cuidador vinculada à Maria Aparecida com permissões granulares ativas para visualização. |
+| Perfil                  | E-mail              | Senha Padrão   | Descrição                                                                                                                                                  |
+| :---------------------- | :------------------ | :------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Titular (Paciente)**  | `maria@exemplo.com` | `cuidagora123` | Conta com histórico completo de 30 dias: medicamentos, tarefas, medições de pressão/glicemia, hidratação, check-ins e orientações do semáforo cadastradas. |
+| **Cuidador Autorizado** | `joao@exemplo.com`  | `cuidagora123` | Conta de cuidador vinculada à Maria Aparecida com permissões granulares ativas para visualização.                                                          |
 
 ---
 
@@ -391,18 +393,18 @@ npx vitest run
 
 ## Scripts Disponíveis
 
-| Comando | Descrição |
-| :--- | :--- |
-| `npm run dev` | Inicia o servidor de desenvolvimento Next.js na porta 3000. |
-| `npm run build` | Gera o bundle otimizado para produção. |
-| `npm run start` | Inicia o servidor Next.js em modo de produção. |
-| `npm run typecheck` | Executa a verificação estática de tipos com o compilador TypeScript. |
-| `npm run lint` | Executa o linter ESLint no projeto. |
-| `npm run test` | Roda os testes unitários e de integração com Vitest. |
-| `npm run db:migrate` | Executa a criação de tabelas e índices no PostgreSQL. |
-| `npm run db:seed` | Insere usuários e dados fictícios de exemplo no banco. |
-| `npm run db:setup` | Executa a migração e o seed sequencialmente. |
-| `npm run db:push` | Sincroniza o schema Drizzle diretamente com o banco de dados. |
+| Comando              | Descrição                                                            |
+| :------------------- | :------------------------------------------------------------------- |
+| `npm run dev`        | Inicia o servidor de desenvolvimento Next.js na porta 3000.          |
+| `npm run build`      | Gera o bundle otimizado para produção.                               |
+| `npm run start`      | Inicia o servidor Next.js em modo de produção.                       |
+| `npm run typecheck`  | Executa a verificação estática de tipos com o compilador TypeScript. |
+| `npm run lint`       | Executa o linter ESLint no projeto.                                  |
+| `npm run test`       | Roda os testes unitários e de integração com Vitest.                 |
+| `npm run db:migrate` | Executa a criação de tabelas e índices no PostgreSQL.                |
+| `npm run db:seed`    | Insere usuários e dados fictícios de exemplo no banco.               |
+| `npm run db:setup`   | Executa a migração e o seed sequencialmente.                         |
+| `npm run db:push`    | Sincroniza o schema Drizzle diretamente com o banco de dados.        |
 
 ---
 

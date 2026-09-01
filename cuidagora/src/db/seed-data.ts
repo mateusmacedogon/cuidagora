@@ -19,10 +19,13 @@ function at(dateIso: string, time: string): Date {
   return new Date(`${dateIso}T${time}:00${OFFSET}`);
 }
 
+export const DEMO_PASSWORD_HASH =
+  "e4e50740c6e5573d4dc183cc3692e56a:7a9aba11683342339d98579900bb41446d17560093160da3fa7bb6af190ec50b1815aa2ca1d98f9fc5e01ef2272f729ab500435054f99bda75948e63bf38fa73";
+
 export async function seedDemoData(client: {
   query: (text: string, params?: any[]) => Promise<any>;
 }): Promise<void> {
-  const password = await hashPassword("cuidagora123");
+  const password = DEMO_PASSWORD_HASH;
 
   // 1. Maria (Paciente) com UUID determinístico
   const ownerRes = await client.query(

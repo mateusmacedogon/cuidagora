@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   FileText,
   HeartHandshake,
-  HeartPulse,
   Pill,
   ShieldCheck,
   Smile,

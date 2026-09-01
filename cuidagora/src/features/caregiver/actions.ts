@@ -51,14 +51,38 @@ export async function inviteCaregiverAction(
       .where(eq(users.email, caregiverEmail))
       .limit(1);
 
-    await db.insert(caregiverAccess).values({
-      ownerId: user.id,
-      caregiverEmail,
-      caregiverName,
-      caregiverId: match[0]?.id ?? null,
-      permissions: permissions as PermissionSet,
-      status: "active",
-    });
+    const existing = await db
+      .select({ id: caregiverAccess.id })
+      .from(caregiverAccess)
+      .where(
+        and(
+          eq(caregiverAccess.ownerId, user.id),
+          eq(caregiverAccess.caregiverEmail, caregiverEmail),
+          eq(caregiverAccess.status, "active"),
+        ),
+      )
+      .limit(1);
+
+    if (existing.length > 0) {
+      await db
+        .update(caregiverAccess)
+        .set({
+          caregiverName,
+          caregiverId: match[0]?.id ?? null,
+          permissions: permissions as PermissionSet,
+          updatedAt: new Date(),
+        })
+        .where(eq(caregiverAccess.id, existing[0].id));
+    } else {
+      await db.insert(caregiverAccess).values({
+        ownerId: user.id,
+        caregiverEmail,
+        caregiverName,
+        caregiverId: match[0]?.id ?? null,
+        permissions: permissions as PermissionSet,
+        status: "active",
+      });
+    }
 
     refresh();
     return successState(

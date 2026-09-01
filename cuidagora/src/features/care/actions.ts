@@ -67,10 +67,11 @@ export async function saveMedicationAction(
 
   const data = parsed.data;
   const endDate = data.endDate ? data.endDate : null;
+  const uniqueTimes = Array.from(new Set(data.times));
 
   try {
     if (data.id) {
-      await db
+      const updated = await db
         .update(medications)
         .set({
           name: data.name,
@@ -81,21 +82,34 @@ export async function saveMedicationAction(
           endDate,
           updatedAt: new Date(),
         })
-        .where(eq(medications.id, data.id));
+        .where(and(eq(medications.id, data.id), eq(medications.userId, user.id)))
+        .returning({ id: medications.id });
+
+      if (updated.length === 0) {
+        return errorState("Medicamento não encontrado.");
+      }
 
       await db.delete(medicationSchedules).where(eq(medicationSchedules.medicationId, data.id));
       await db
         .insert(medicationSchedules)
-        .values(data.times.map((time) => ({ medicationId: data.id as string, timeOfDay: time })));
+        .values(uniqueTimes.map((time) => ({ medicationId: data.id as string, timeOfDay: time })));
 
       await db
-        .update(careTasks)
-        .set({
-          title: `Tomar ${data.name}`,
-          description: data.dose ? `Dose prescrita: ${data.dose}` : "",
-          updatedAt: new Date(),
-        })
-        .where(eq(careTasks.medicationId, data.id));
+        .delete(careTasks)
+        .where(and(eq(careTasks.medicationId, data.id), eq(careTasks.userId, user.id)));
+
+      if (data.createTasks) {
+        await db.insert(careTasks).values(
+          uniqueTimes.map((time) => ({
+            userId: user.id,
+            title: `Tomar ${data.name}`,
+            description: data.dose ? `Dose prescrita: ${data.dose}` : "",
+            kind: "medication",
+            timeOfDay: time,
+            medicationId: data.id,
+          })),
+        );
+      }
 
       refreshCareViews();
       return successState("Medicamento atualizado com sucesso.");
@@ -119,11 +133,11 @@ export async function saveMedicationAction(
 
     await db
       .insert(medicationSchedules)
-      .values(data.times.map((time) => ({ medicationId, timeOfDay: time })));
+      .values(uniqueTimes.map((time) => ({ medicationId, timeOfDay: time })));
 
     if (data.createTasks) {
       await db.insert(careTasks).values(
-        data.times.map((time) => ({
+        uniqueTimes.map((time) => ({
           userId: user.id,
           title: `Tomar ${data.name}`,
           description: data.dose ? `Dose prescrita: ${data.dose}` : "",
@@ -138,7 +152,7 @@ export async function saveMedicationAction(
       userId: user.id,
       category: "medication",
       title: `Medicamento cadastrado: ${data.name}`,
-      description: [data.dose, data.times.join(", ")].filter(Boolean).join(" · "),
+      description: [data.dose, uniqueTimes.join(", ")].filter(Boolean).join(" · "),
       occurredAt: new Date(),
       referenceId: medicationId,
     });
@@ -161,12 +175,12 @@ export async function archiveMedicationAction(formData: FormData): Promise<void>
   await db
     .update(medications)
     .set({ archivedAt: restore ? null : new Date(), updatedAt: new Date() })
-    .where(eq(medications.id, id));
+    .where(and(eq(medications.id, id), eq(medications.userId, user.id)));
 
   await db
     .update(careTasks)
     .set({ archivedAt: restore ? null : new Date(), updatedAt: new Date() })
-    .where(eq(careTasks.medicationId, id));
+    .where(and(eq(careTasks.medicationId, id), eq(careTasks.userId, user.id)));
 
   refreshCareViews();
 }
@@ -182,7 +196,7 @@ export async function saveTaskAction(_prev: ActionState, formData: FormData): Pr
   const data = parsed.data;
   try {
     if (data.id) {
-      await db
+      const updated = await db
         .update(careTasks)
         .set({
           title: data.title,
@@ -191,7 +205,13 @@ export async function saveTaskAction(_prev: ActionState, formData: FormData): Pr
           timeOfDay: data.timeOfDay,
           updatedAt: new Date(),
         })
-        .where(eq(careTasks.id, data.id));
+        .where(and(eq(careTasks.id, data.id), eq(careTasks.userId, user.id)))
+        .returning({ id: careTasks.id });
+
+      if (updated.length === 0) {
+        return errorState("Cuidado não encontrado.");
+      }
+
       refreshCareViews();
       return successState("Cuidado atualizado.");
     }
@@ -232,16 +252,16 @@ export async function toggleTaskAction(formData: FormData): Promise<void> {
   }
   await saveSyncState(sync);
 
-  // 2. Persiste no banco de dados
+  // 2. Persiste no banco de dados com validação de ownership
   const owned = await db
     .select({ id: careTasks.id, title: careTasks.title })
     .from(careTasks)
-    .where(eq(careTasks.id, taskId))
+    .where(and(eq(careTasks.id, taskId), eq(careTasks.userId, user.id)))
     .limit(1)
     .catch(() => []);
   const task = owned[0];
 
-  if (done) {
+  if (done && task) {
     const now = new Date();
     await db
       .insert(taskCompletions)
@@ -249,20 +269,24 @@ export async function toggleTaskAction(formData: FormData): Promise<void> {
       .onConflictDoNothing()
       .catch(() => {});
 
-    if (task) {
-      await addTimelineEvent({
-        userId: user.id,
-        category: "task",
-        title: `Cuidado concluído: ${task.title}`,
-        description: `Registrado às ${formatTime(now)}`,
-        occurredAt: now,
-        referenceId: taskId,
-      }).catch(() => {});
-    }
-  } else {
+    await addTimelineEvent({
+      userId: user.id,
+      category: "task",
+      title: `Cuidado concluído: ${task.title}`,
+      description: `Registrado às ${formatTime(now)}`,
+      occurredAt: now,
+      referenceId: taskId,
+    }).catch(() => {});
+  } else if (!done) {
     await db
       .delete(taskCompletions)
-      .where(and(eq(taskCompletions.taskId, taskId), eq(taskCompletions.referenceDate, referenceDate)))
+      .where(
+        and(
+          eq(taskCompletions.taskId, taskId),
+          eq(taskCompletions.referenceDate, referenceDate),
+          eq(taskCompletions.userId, user.id),
+        ),
+      )
       .catch(() => {});
   }
 
@@ -283,12 +307,11 @@ export async function archiveTaskAction(formData: FormData): Promise<void> {
     await saveSyncState(sync);
   }
 
-  // 2. Exclui do banco
-  await db.delete(careTasks).where(eq(careTasks.id, id)).catch(() => {});
+  // 2. Soft-delete no banco (marcando archivedAt)
   await db
     .update(careTasks)
     .set({ archivedAt: new Date(), updatedAt: new Date() })
-    .where(eq(careTasks.id, id))
+    .where(and(eq(careTasks.id, id), eq(careTasks.userId, user.id)))
     .catch(() => {});
 
   refreshCareViews();
@@ -399,11 +422,10 @@ export async function deleteSymptomAction(formData: FormData): Promise<void> {
     await saveSyncState(sync);
   }
 
-  await db.delete(symptoms).where(eq(symptoms.id, id)).catch(() => {});
   await db
     .update(symptoms)
     .set({ deletedAt: new Date() })
-    .where(eq(symptoms.id, id))
+    .where(and(eq(symptoms.id, id), eq(symptoms.userId, user.id)))
     .catch(() => {});
 
   refreshCareViews();
@@ -532,11 +554,10 @@ export async function deleteMeasurementAction(formData: FormData): Promise<void>
     await saveSyncState(sync);
   }
 
-  await db.delete(measurements).where(eq(measurements.id, id)).catch(() => {});
   await db
     .update(measurements)
     .set({ deletedAt: new Date() })
-    .where(eq(measurements.id, id))
+    .where(and(eq(measurements.id, id), eq(measurements.userId, user.id)))
     .catch(() => {});
 
   void measurementMeta(kind);

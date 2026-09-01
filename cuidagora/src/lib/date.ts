@@ -51,7 +51,18 @@ export function endOfDay(dateIso: string): Date {
 }
 
 export function formatDate(value: Date | string): string {
-  const date = typeof value === "string" ? toInstant(value, "12:00") : value;
+  let date: Date;
+  if (value instanceof Date) {
+    date = value;
+  } else if (typeof value === "string") {
+    if (value.includes("T") || value.includes("Z")) {
+      date = new Date(value);
+    } else {
+      date = toInstant(value, "12:00");
+    }
+  } else {
+    date = new Date();
+  }
   return new Intl.DateTimeFormat("pt-BR", {
     timeZone: APP_TIME_ZONE,
     day: "2-digit",
@@ -61,7 +72,18 @@ export function formatDate(value: Date | string): string {
 }
 
 export function formatLongDate(value: Date | string): string {
-  const date = typeof value === "string" ? toInstant(value, "12:00") : value;
+  let date: Date;
+  if (value instanceof Date) {
+    date = value;
+  } else if (typeof value === "string") {
+    if (value.includes("T") || value.includes("Z")) {
+      date = new Date(value);
+    } else {
+      date = toInstant(value, "12:00");
+    }
+  } else {
+    date = new Date();
+  }
   return new Intl.DateTimeFormat("pt-BR", {
     timeZone: APP_TIME_ZONE,
     weekday: "long",

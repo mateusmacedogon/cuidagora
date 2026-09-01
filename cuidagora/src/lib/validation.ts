@@ -51,17 +51,22 @@ export const resetPasswordSchema = z
     message: "As duas senhas precisam ser iguais.",
   });
 
-export const medicationSchema = z.object({
-  id: z.string().uuid().optional(),
-  name: requiredText("o nome do medicamento", 120),
-  dose: trimmed(80).default(""),
-  frequency: z.enum(["daily", "weekdays", "weekly", "as_needed"]).default("daily"),
-  notes: trimmed(500).default(""),
-  startDate: isoDate,
-  endDate: z.union([isoDate, z.literal("")]).optional(),
-  times: z.array(timeOfDay).min(1, "Informe pelo menos um horário.").max(8),
-  createTasks: z.boolean().default(true),
-});
+export const medicationSchema = z
+  .object({
+    id: z.string().uuid().optional(),
+    name: requiredText("o nome do medicamento", 120),
+    dose: trimmed(80).default(""),
+    frequency: z.enum(["daily", "weekdays", "weekly", "as_needed"]).default("daily"),
+    notes: trimmed(500).default(""),
+    startDate: isoDate,
+    endDate: z.union([isoDate, z.literal("")]).optional(),
+    times: z.array(timeOfDay).min(1, "Informe pelo menos um horário.").max(8),
+    createTasks: z.boolean().default(true),
+  })
+  .refine((data) => !data.endDate || data.endDate >= data.startDate, {
+    path: ["endDate"],
+    message: "A data de término não pode ser anterior ao início.",
+  });
 
 export const careTaskSchema = z.object({
   id: z.string().uuid().optional(),
@@ -95,21 +100,26 @@ export const symptomSchema = z.object({
   notes: trimmed(500).default(""),
 });
 
-export const bloodPressureSchema = z.object({
-  systolic: z.coerce
-    .number({ message: "Informe o número maior." })
-    .int()
-    .min(50, "Valor muito baixo, confira o número.")
-    .max(300, "Valor muito alto, confira o número."),
-  diastolic: z.coerce
-    .number({ message: "Informe o número menor." })
-    .int()
-    .min(30, "Valor muito baixo, confira o número.")
-    .max(200, "Valor muito alto, confira o número."),
-  date: isoDate,
-  time: timeOfDay,
-  notes: trimmed(300).default(""),
-});
+export const bloodPressureSchema = z
+  .object({
+    systolic: z.coerce
+      .number({ message: "Informe o número maior." })
+      .int()
+      .min(50, "Valor muito baixo, confira o número.")
+      .max(300, "Valor muito alto, confira o número."),
+    diastolic: z.coerce
+      .number({ message: "Informe o número menor." })
+      .int()
+      .min(30, "Valor muito baixo, confira o número.")
+      .max(200, "Valor muito alto, confira o número."),
+    date: isoDate,
+    time: timeOfDay,
+    notes: trimmed(300).default(""),
+  })
+  .refine((data) => data.systolic > data.diastolic, {
+    path: ["systolic"],
+    message: "A pressão sistólica (máxima) deve ser maior que a diastólica (mínima).",
+  });
 
 export const glucoseSchema = z.object({
   value: z.coerce

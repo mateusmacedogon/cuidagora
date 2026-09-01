@@ -1,15 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Volume2, VolumeX } from "lucide-react";
+
+function subscribe(callback: () => void) {
+  return () => {};
+}
+
+function getSnapshot() {
+  return typeof window !== "undefined" && "speechSynthesis" in window;
+}
+
+function getServerSnapshot() {
+  return false;
+}
 
 /** Leitura em voz alta usando a síntese de voz nativa do navegador (quando existir). */
 export function SpeakButton({ text, label = "Ouvir esta página" }: { text: string; label?: string }) {
-  const [supported, setSupported] = useState(false);
+  const supported = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [speaking, setSpeaking] = useState(false);
 
   useEffect(() => {
-    setSupported(typeof window !== "undefined" && "speechSynthesis" in window);
     return () => {
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();

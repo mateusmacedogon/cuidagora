@@ -203,7 +203,7 @@ export function GlucoseChart({
   measurements: Measurement[];
 }) {
   const items = [...measurements]
-    .filter((m) => m.value !== null && !isNaN(Number(m.value)))
+    .filter((m) => m.value !== null && m.value !== "" && !isNaN(Number(m.value)))
     .sort((a, b) => new Date(a.measuredAt).getTime() - new Date(b.measuredAt).getTime());
 
   if (items.length === 0) return null;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AlertCircle, Check, Mic, MicOff, X } from "lucide-react";
 
 type SpeechRecognitionLike = {
@@ -25,6 +25,18 @@ function getRecognition(): RecognitionConstructor | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
+function subscribe(callback: () => void) {
+  return () => {};
+}
+
+function getSnapshot() {
+  return getRecognition() !== null;
+}
+
+function getServerSnapshot() {
+  return false;
+}
+
 /**
  * Campo de texto com ditado por voz.
  * O texto reconhecido é sempre mostrado para confirmação antes de entrar no campo.
@@ -46,14 +58,13 @@ export function VoiceTextArea({
   rows?: number;
   required?: boolean;
 }) {
+  const supported = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [value, setValue] = useState(defaultValue);
   const [draft, setDraft] = useState("");
   const [listening, setListening] = useState(false);
-  const [supported, setSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   useEffect(() => {
-    setSupported(getRecognition() !== null);
     return () => recognitionRef.current?.stop();
   }, []);
 

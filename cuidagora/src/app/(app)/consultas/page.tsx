@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: "Agenda de Consultas — CuidAgora" }
 export default async function AppointmentsPage() {
   const user = await requireUser();
   const [all, questions] = await Promise.all([listAppointments(user.id), listQuestions(user.id)]);
-  const now = Date.now();
+  const now = nowUtc().getTime();
   const upcoming = all.filter((item) => item.scheduledAt.getTime() >= now);
   const past = all.filter((item) => item.scheduledAt.getTime() < now).reverse();
   const openQuestions = questions.filter((item) => !item.answered);

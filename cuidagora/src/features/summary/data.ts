@@ -70,7 +70,10 @@ export async function buildSummary(userId: string, range: SummaryRange) {
       ) + 1;
 
     const expected = (activeTasks?.length || 0) * Math.max(days, 1);
-    const adherence = expected > 0 ? Math.round(((completions || 0) / expected) * 100) : null;
+    const adherence =
+      expected > 0
+        ? Math.min(100, Math.max(0, Math.round(((completions || 0) / expected) * 100)))
+        : null;
 
     const notes = (checkinList || [])
       .filter((item) => (item?.note || "").trim().length > 0 || (item?.painNote || "").trim().length > 0)

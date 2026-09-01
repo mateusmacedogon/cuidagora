@@ -131,24 +131,19 @@ export async function listTasksForDate(userId: string, dateIso: string): Promise
 
 export async function countCompletionsBetween(userId: string, fromIso: string, toIso: string) {
   await ensureDbReady();
-  const [rows, sync] = await Promise.all([
-    db
-      .select({ total: sql<number>`count(*)::int` })
-      .from(taskCompletions)
-      .where(
-        and(
-          eq(taskCompletions.userId, userId),
-          gte(taskCompletions.referenceDate, fromIso),
-          lte(taskCompletions.referenceDate, toIso),
-        ),
-      )
-      .catch(() => [{ total: 0 }]),
-    getSyncState().catch(() => null),
-  ]);
+  const rows = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(taskCompletions)
+    .where(
+      and(
+        eq(taskCompletions.userId, userId),
+        gte(taskCompletions.referenceDate, fromIso),
+        lte(taskCompletions.referenceDate, toIso),
+      ),
+    )
+    .catch(() => [{ total: 0 }]);
 
-  const dbCount = rows[0]?.total ?? 0;
-  const syncCount = sync ? Object.keys(sync.completions || {}).length : 0;
-  return Math.max(dbCount, syncCount);
+  return rows[0]?.total ?? 0;
 }
 
 /* --------------------------------- Check-in -------------------------------- */
@@ -280,7 +275,7 @@ export async function getHydrationTotal(userId: string, dateIso: string): Promis
   if (sync && typeof sync.hydrationTotal === "number" && sync.hydrationTotal > 0) {
     return Math.min(10000, Math.max(dbTotal, sync.hydrationTotal));
   }
-  return Math.min(10000, dbTotal || 850);
+  return Math.min(10000, dbTotal);
 }
 
 export async function getLatestMeasurement(userId: string, kind: string, dateIso: string) {

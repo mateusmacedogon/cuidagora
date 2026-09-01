@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowRight, Calendar, Clock, HelpCircle, History, Plus, Trash2 } from "lucide-react";
 
 import { Card, CardTitle, PageHeader } from "@/components/ui/Card";
 import { Badge, EmptyState } from "@/components/ui/Feedback";
@@ -9,7 +10,7 @@ import { listAppointments, listQuestions } from "@/features/care/data";
 import { requireUser } from "@/lib/auth/session";
 import { formatDateTime } from "@/lib/date";
 
-export const metadata: Metadata = { title: "Minhas Consultas — CuidAgora" };
+export const metadata: Metadata = { title: "Agenda de Consultas — CuidAgora" };
 
 export default async function AppointmentsPage() {
   const user = await requireUser();
@@ -22,54 +23,76 @@ export default async function AppointmentsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        icon="📅"
-        title="Minhas Consultas"
-        description="Guarde data, local e as perguntas que você quer fazer."
+        icon={<Calendar className="size-7 text-teal-700" />}
+        title="Agenda de Consultas Médicas"
+        description="Organização dos agendamentos médicos, dados do profissional e caderno de dúvidas para a consulta."
       />
 
       <Card>
-        <CardTitle icon="⏭️" description={`${upcoming.length} consulta(s) marcada(s)`}>
-          Próximas consultas
+        <CardTitle
+          icon={<Calendar className="size-5 text-teal-700" />}
+          description={`${upcoming.length} consulta(s) programada(s)`}
+        >
+          Próximas Consultas
         </CardTitle>
         {upcoming.length === 0 ? (
           <EmptyState
-            icon="📅"
-            title="Nenhuma consulta marcada"
-            description="Cadastre sua próxima consulta para receber o lembrete na tela inicial."
+            icon={<Calendar className="size-8 text-teal-600" />}
+            title="Nenhuma consulta agendada no momento"
+            description="Cadastre seu próximo atendimento médico abaixo para manter as perguntas organizadas."
           />
         ) : (
           <ul className="flex flex-col gap-3">
             {upcoming.map((appointment) => {
               const related = openQuestions.filter((item) => item.appointmentId === appointment.id);
               return (
-                <li key={appointment.id} className="rounded-2xl border-2 border-[var(--color-line)] p-4">
+                <li
+                  key={appointment.id}
+                  className="rounded-xl border border-slate-200 bg-white p-4.5 shadow-2xs hover:border-slate-300 transition-colors"
+                >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <h3 className="text-lg font-bold">
-                        <span aria-hidden="true">🩺 </span>
-                        {appointment.specialty}
+                      <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <Calendar className="size-4 text-teal-700" />
+                        <span>{appointment.specialty}</span>
                       </h3>
-                      <p className="text-[var(--color-ink-soft)]">{formatDateTime(appointment.scheduledAt)}</p>
-                      {appointment.professional ? <p>Com {appointment.professional}</p> : null}
-                      {appointment.location ? <p>Local: {appointment.location}</p> : null}
-                      {appointment.notes ? <p className="mt-1 text-sm">Observação: {appointment.notes}</p> : null}
-                      <p className="mt-2">
-                        <Badge tone={related.length > 0 ? "info" : "neutral"} icon="❓">
-                          {related.length} pergunta(s) salva(s)
-                        </Badge>
+                      <p className="text-xs sm:text-sm text-slate-600 mt-0.5 font-medium">
+                        {formatDateTime(appointment.scheduledAt)}
                       </p>
+                      {appointment.professional ? (
+                        <p className="text-xs sm:text-sm text-slate-700 mt-1">Profissional: {appointment.professional}</p>
+                      ) : null}
+                      {appointment.location ? (
+                        <p className="text-xs text-slate-500 mt-0.5">Local: {appointment.location}</p>
+                      ) : null}
+                      {appointment.notes ? (
+                        <p className="mt-1 text-xs text-slate-600 font-medium">Nota: {appointment.notes}</p>
+                      ) : null}
+                      <div className="mt-2.5">
+                        <Badge
+                          tone={related.length > 0 ? "info" : "neutral"}
+                          icon={<HelpCircle className="size-3" />}
+                        >
+                          {related.length} pergunta(s) no caderno
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
                       <Link
                         href={`/consultas/${appointment.id}`}
-                        className="min-h-12 rounded-full border-2 border-[var(--color-brand)] px-4 py-2 font-semibold text-[var(--color-brand-strong)]"
+                        className="inline-flex items-center gap-1.5 min-h-9 rounded-lg border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-800 hover:bg-teal-100 transition-colors cursor-pointer"
                       >
-                        📝 Abrir e preparar
+                        Preparar consulta
+                        <ArrowRight className="size-3.5" />
                       </Link>
                       <form action={deleteAppointmentAction}>
                         <input type="hidden" name="id" value={appointment.id} />
-                        <button type="submit" className="min-h-12 rounded-full border-2 border-[var(--color-line)] px-4 py-2 font-semibold">
-                          🗑️ Remover
+                        <button
+                          type="submit"
+                          className="inline-flex items-center justify-center size-9 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          title="Remover agendamento"
+                        >
+                          <Trash2 className="size-4" />
                         </button>
                       </form>
                     </div>
@@ -82,18 +105,35 @@ export default async function AppointmentsPage() {
       </Card>
 
       <Card>
-        <CardTitle icon="➕">Cadastrar consulta</CardTitle>
+        <CardTitle icon={<Plus className="size-5 text-teal-700" />}>
+          Cadastrar novo agendamento
+        </CardTitle>
         <AppointmentForm />
       </Card>
 
       {past.length > 0 ? (
         <Card>
-          <CardTitle icon="📚">Consultas anteriores</CardTitle>
+          <CardTitle
+            icon={<History className="size-5 text-slate-600" />}
+            description="Histórico de consultas realizadas anteriormente."
+          >
+            Consultas Anteriores
+          </CardTitle>
           <ul className="flex flex-col gap-2">
             {past.map((appointment) => (
-              <li key={appointment.id} className="rounded-2xl bg-[var(--color-surface-muted)] p-3">
-                <Link href={`/consultas/${appointment.id}`} className="font-semibold underline">
-                  {appointment.specialty} — {formatDateTime(appointment.scheduledAt)}
+              <li
+                key={appointment.id}
+                className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 hover:bg-slate-100/70 transition-colors"
+              >
+                <div>
+                  <p className="text-sm font-bold text-slate-900">{appointment.specialty}</p>
+                  <p className="text-xs text-slate-500">{formatDateTime(appointment.scheduledAt)}</p>
+                </div>
+                <Link
+                  href={`/consultas/${appointment.id}`}
+                  className="text-xs font-bold text-teal-700 hover:text-teal-900 hover:underline"
+                >
+                  Ver detalhes →
                 </Link>
               </li>
             ))}

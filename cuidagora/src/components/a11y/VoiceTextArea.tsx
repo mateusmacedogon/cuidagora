@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AlertCircle, Check, Mic, MicOff, X } from "lucide-react";
 
 type SpeechRecognitionLike = {
   lang: string;
@@ -81,14 +82,14 @@ export function VoiceTextArea({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={name} className="text-base font-semibold">
+      <label htmlFor={name} className="text-sm sm:text-base font-semibold text-slate-900">
         {label}
         {!required ? (
-          <span className="ml-2 text-sm font-normal text-[var(--color-ink-soft)]">(opcional)</span>
+          <span className="ml-2 text-xs sm:text-sm font-normal text-slate-500">(opcional)</span>
         ) : null}
       </label>
       {hint ? (
-        <p id={`${name}-hint`} className="text-sm text-[var(--color-ink-soft)]">
+        <p id={`${name}-hint`} className="text-xs sm:text-sm text-slate-500">
           {hint}
         </p>
       ) : null}
@@ -104,53 +105,67 @@ export function VoiceTextArea({
         className="field-control"
       />
       {supported ? (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 pt-1">
           <button
             type="button"
             onClick={listening ? () => recognitionRef.current?.stop() : startListening}
             aria-pressed={listening}
-            className="inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-[var(--color-accent)] bg-[var(--color-accent-soft)] px-4 py-2 text-sm font-semibold text-[var(--color-accent)]"
+            className={`inline-flex min-h-10 items-center gap-2 rounded-xl border px-3.5 py-1.5 text-xs sm:text-sm font-semibold transition-colors shadow-2xs cursor-pointer ${
+              listening
+                ? "border-rose-300 bg-rose-50 text-rose-800 animate-pulse"
+                : "border-indigo-200 bg-indigo-50/80 text-indigo-900 hover:bg-indigo-100"
+            }`}
           >
-            <span aria-hidden="true">🎤</span>
-            {listening ? "Gravando… toque para parar" : "Ditar por voz"}
+            {listening ? (
+              <>
+                <MicOff className="size-4 text-rose-600" aria-hidden="true" />
+                Gravando… toque para parar
+              </>
+            ) : (
+              <>
+                <Mic className="size-4 text-indigo-600" aria-hidden="true" />
+                Ditar relato por voz
+              </>
+            )}
           </button>
-          <span className="text-sm text-[var(--color-ink-soft)]">
-            Você confere o texto antes de salvar.
+          <span className="text-xs text-slate-500">
+            Você confere o texto antes de confirmar.
           </span>
         </div>
       ) : null}
       {draft ? (
         <div
-          className="rounded-2xl border-2 border-[var(--color-accent)] bg-[var(--color-accent-soft)] p-3"
+          className="rounded-xl border border-indigo-200 bg-indigo-50/70 p-3.5 shadow-xs"
           role="status"
           aria-live="polite"
         >
-          <p className="text-sm font-bold">Ouvi isto:</p>
-          <p className="my-1 font-medium">“{draft}”</p>
-          <div className="flex flex-wrap gap-2">
+          <p className="text-xs font-bold text-indigo-900 uppercase tracking-wide">Texto reconhecido:</p>
+          <p className="my-1.5 text-sm font-medium text-slate-800 italic">“{draft}”</p>
+          <div className="flex flex-wrap gap-2 pt-1">
             <button
               type="button"
               onClick={() => {
                 setValue((current) => (current ? `${current} ${draft}` : draft));
                 setDraft("");
               }}
-              className="min-h-11 rounded-full bg-[var(--color-brand)] px-4 py-2 text-sm font-semibold text-white"
+              className="inline-flex items-center gap-1.5 min-h-9 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-teal-700 transition-colors shadow-2xs cursor-pointer"
             >
-              ✅ Usar este texto
+              <Check className="size-3.5" aria-hidden="true" /> Inserir no campo
             </button>
             <button
               type="button"
               onClick={() => setDraft("")}
-              className="min-h-11 rounded-full border border-[var(--color-line)] bg-white px-4 py-2 text-sm font-semibold"
+              className="inline-flex items-center gap-1.5 min-h-9 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
             >
-              ✖️ Descartar
+              <X className="size-3.5 text-slate-500" aria-hidden="true" /> Descartar
             </button>
           </div>
         </div>
       ) : null}
       {error ? (
-        <p role="alert" className="text-sm font-semibold text-[var(--color-alert)]">
-          ⚠️ {error}
+        <p role="alert" className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-rose-600">
+          <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
+          <span>{error}</span>
         </p>
       ) : null}
     </div>

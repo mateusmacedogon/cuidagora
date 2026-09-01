@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AlertCircle, Clock, FileText, Plus, Trash2 } from "lucide-react";
 
 import { Card, CardTitle, PageHeader } from "@/components/ui/Card";
 import { Badge, EmptyState, SafetyNotice } from "@/components/ui/Feedback";
@@ -9,7 +10,7 @@ import { requireUser } from "@/lib/auth/session";
 import { addDaysIso, formatDateTime, todayIso } from "@/lib/date";
 import { intensityLabel } from "@/lib/domain";
 
-export const metadata: Metadata = { title: "Sintomas — CuidAgora" };
+export const metadata: Metadata = { title: "Registro de Sintomas — CuidAgora" };
 
 const INTENSITY_TONE = { 1: "info", 2: "warning", 3: "danger" } as const;
 
@@ -21,50 +22,69 @@ export default async function SymptomsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        icon="📝"
-        title="Meus sintomas"
-        description="Anote o que você sentiu para lembrar depois e contar ao seu profissional de saúde."
+        icon={<FileText className="size-7 text-teal-700" />}
+        title="Registro de Sintomas e Queixas"
+        description="Histórico de sintomas relatados para compartilhamento com seu médico na consulta."
       />
 
       <SafetyNotice compact />
 
       <Card>
-        <CardTitle icon="➕">Registrar um sintoma</CardTitle>
+        <CardTitle icon={<Plus className="size-5 text-teal-700" />}>
+          Anotar novo sintoma ou mal-estar
+        </CardTitle>
         <SymptomForm />
       </Card>
 
       <Card>
-        <CardTitle icon="🕓" description="Últimos 30 dias.">
-          Sintomas registrados
+        <CardTitle
+          icon={<Clock className="size-5 text-teal-700" />}
+          description="Ocorrências registradas nos últimos 30 dias."
+        >
+          Histórico de Sintomas
         </CardTitle>
         {symptoms.length === 0 ? (
           <EmptyState
-            icon="📝"
-            title="Você ainda não registrou sintomas"
-            description="Se sentir algo diferente, registre aqui. Isso ajuda a lembrar dos detalhes na consulta."
+            icon={<FileText className="size-8 text-teal-600" />}
+            title="Nenhum sintoma registrado recentemente"
+            description="Caso sinta algum desconforto ou efeito colateral, anote aqui para apoiar o acompanhamento médico."
           />
         ) : (
           <ul className="flex flex-col gap-3">
             {symptoms.map((symptom) => (
-              <li key={symptom.id} className="rounded-2xl border-2 border-[var(--color-line)] p-4">
+              <li
+                key={symptom.id}
+                className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs hover:border-slate-300 transition-colors"
+              >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-bold">{symptom.name}</h3>
-                    <p className="mt-1">
-                      <Badge tone={INTENSITY_TONE[symptom.intensity as 1 | 2 | 3] ?? "info"} icon="📊">
-                        Intensidade: {intensityLabel(symptom.intensity)}
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900">{symptom.name}</h3>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                      <Badge
+                        tone={INTENSITY_TONE[symptom.intensity as 1 | 2 | 3] ?? "info"}
+                        icon={<AlertCircle className="size-3" />}
+                      >
+                        {intensityLabel(symptom.intensity)}
                       </Badge>
-                    </p>
-                    <p className="mt-1 text-sm text-[var(--color-ink-soft)]">
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500">
                       {formatDateTime(symptom.occurredAt)}
-                      {symptom.durationMinutes ? ` · durou ${symptom.durationMinutes} minutos` : ""}
+                      {symptom.durationMinutes ? ` · duração de ${symptom.durationMinutes} minutos` : ""}
                     </p>
-                    {symptom.notes ? <p className="mt-1">{symptom.notes}</p> : null}
+                    {symptom.notes ? (
+                      <p className="mt-1.5 text-xs sm:text-sm text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        {symptom.notes}
+                      </p>
+                    ) : null}
                   </div>
                   <form action={deleteSymptomAction}>
                     <input type="hidden" name="id" value={symptom.id} />
-                    <button type="submit" className="min-h-11 rounded-full border-2 border-[var(--color-line)] px-4 py-2 text-sm font-semibold">
-                      🗑️ Apagar
+                    <button
+                      type="submit"
+                      className="inline-flex items-center gap-1 min-h-8 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-500 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="size-3" />
+                      Excluir
                     </button>
                   </form>
                 </div>

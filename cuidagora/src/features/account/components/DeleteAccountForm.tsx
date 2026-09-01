@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { Trash2 } from "lucide-react";
 
 import { TextField } from "@/components/ui/Field";
 import { FormFeedback, SubmitButton } from "@/components/ui/SubmitButton";
@@ -13,7 +14,7 @@ export function DeleteAccountForm() {
     <form action={action} className="flex flex-col gap-4" noValidate>
       <FormFeedback state={state} />
       <TextField
-        label="Sua senha"
+        label="Digite sua senha atual"
         name="password"
         type="password"
         autoComplete="current-password"
@@ -21,13 +22,13 @@ export function DeleteAccountForm() {
         error={state.errors.password}
       />
       <TextField
-        label="Escreva a palavra EXCLUIR para confirmar"
+        label="Digite a palavra EXCLUIR para confirmar a exclusão irreversível"
         name="confirmation"
         required
         error={state.errors.confirmation}
         placeholder="EXCLUIR"
       />
-      <SubmitButton variant="danger" icon="🗑️" pendingLabel="Excluindo…">
+      <SubmitButton variant="danger" icon={<Trash2 className="size-4" />} pendingLabel="Excluindo…">
         Excluir minha conta e todos os dados
       </SubmitButton>
     </form>

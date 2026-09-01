@@ -1,0 +1,13 @@
+{
+  "name": "cuidagora-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix cuidagora run dev",
+    "build": "npm --prefix cuidagora run build",
+    "start": "npm --prefix cuidagora run start",
+    "lint": "npm --prefix cuidagora run lint",
+    "typecheck": "npm --prefix cuidagora run typecheck",
+    "test": "npm --prefix cuidagora test"
+  }
+}

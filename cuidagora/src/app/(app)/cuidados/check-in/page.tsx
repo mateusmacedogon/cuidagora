@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Smile, SmilePlus } from "lucide-react";
 
 import { SpeakButton } from "@/components/a11y/SpeakButton";
 import { Card, CardTitle, PageHeader } from "@/components/ui/Card";
@@ -9,7 +10,7 @@ import { requireUser } from "@/lib/auth/session";
 import { formatLongDate, todayIso } from "@/lib/date";
 import { MOOD_LABELS, type MoodValue } from "@/lib/domain";
 
-export const metadata: Metadata = { title: "Check-in diário — CuidAgora" };
+export const metadata: Metadata = { title: "Check-in Diário — CuidAgora" };
 
 export default async function CheckinPage() {
   const user = await requireUser();
@@ -19,27 +20,30 @@ export default async function CheckinPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        icon="😊"
-        title="Check-in de hoje"
-        description={`${formatLongDate(dateIso)} — leva menos de um minuto.`}
+        icon={<Smile className="size-7 text-teal-700" />}
+        title="Check-in Diário de Bem-estar"
+        description={`${formatLongDate(dateIso)} — Avaliação simplificada do seu estado geral.`}
       />
 
       {user.preferences.readAloud ? (
         <SpeakButton
-          text="Check-in de hoje. Como você está se sentindo? Escolha entre bem, normal, mais ou menos, e não estou bem. Depois conte se sentiu dor e se conseguiu fazer seus cuidados."
-          label="Ouvir as perguntas"
+          text="Check-in de hoje. Como você está se sentindo? Escolha entre bem e disposto, normal e estável, mais ou menos, ou indisposto. Depois conte se sentiu dor e se conseguiu fazer seus cuidados."
+          label="Ouvir instruções do check-in"
         />
       ) : null}
 
       {checkin ? (
-        <Alert tone="success" title="Você já fez o check-in de hoje">
-          Registrado como: {MOOD_LABELS[checkin.mood as MoodValue]}. Pode alterar abaixo se quiser.
+        <Alert tone="success" title="Check-in de hoje já registrado">
+          Estado atual registrado: <strong>{MOOD_LABELS[checkin.mood as MoodValue]}</strong>. Se desejar, você pode atualizar as informações no formulário abaixo.
         </Alert>
       ) : null}
 
       <Card>
-        <CardTitle icon="✍️" description="Suas respostas ficam guardadas só para você e para quem você autorizar.">
-          Contar como estou
+        <CardTitle
+          icon={<SmilePlus className="size-5 text-teal-700" />}
+          description="Seus registros são protegidos e visíveis apenas para você e seus cuidadores autorizados."
+        >
+          Registro de Humor e Disposição
         </CardTitle>
         <CheckinForm
           defaults={

@@ -2,15 +2,56 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 
+const APP_NAME = "CuidAgora";
+const APP_DEFAULT_TITLE = "CuidAgora — Gestão Humanizada e Acessível de Cuidados de Saúde";
+const APP_TITLE_TEMPLATE = "%s | CuidAgora";
+const APP_DESCRIPTION =
+  "Organize rotinas de saúde, medicamentos, sinais vitais, sintomas e consultas com acessibilidade total (WCAG AA). Feito para pacientes, idosos e seus cuidadores.";
+
 export const metadata: Metadata = {
-  title: "CuidAgora — organize seus cuidados de saúde",
-  description:
-    "O CuidAgora ajuda você a organizar medicamentos, consultas, medições e cuidados do dia a dia. Não faz diagnósticos e não substitui profissionais de saúde.",
+  applicationName: APP_NAME,
+  title: {
+    default: APP_DEFAULT_TITLE,
+    template: APP_TITLE_TEMPLATE,
+  },
+  description: APP_DESCRIPTION,
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://cuidagora.vercel.app"),
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: APP_NAME,
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    siteName: APP_NAME,
+    title: {
+      default: APP_DEFAULT_TITLE,
+      template: APP_TITLE_TEMPLATE,
+    },
+    description: APP_DESCRIPTION,
+    locale: "pt_BR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: {
+      default: APP_DEFAULT_TITLE,
+      template: APP_TITLE_TEMPLATE,
+    },
+    description: APP_DESCRIPTION,
+  },
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 5,
   themeColor: "#0f766e",
 };
 
@@ -21,3 +62,4 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     </html>
   );
 }
+

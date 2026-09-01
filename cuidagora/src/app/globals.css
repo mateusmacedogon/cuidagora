@@ -1,75 +1,86 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-   CuidAgora — Design System
-   Tons claros, acolhedores e com alto contraste de leitura.
-   Todos os tokens são variáveis CSS para permitir "modo idoso" e
-   "alto contraste" sem duplicar componentes.
+   CuidAgora — Design System Profissional de Saúde
+   Interface moderna, límpida, com alto padrão estético e acessibilidade total (WCAG AA).
    ========================================================================== */
 
 @theme {
-  --font-sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-  --color-canvas: #f4f8f7;
+  --color-canvas: #f8fafc;
   --color-surface: #ffffff;
-  --color-surface-muted: #eef4f3;
-  --color-line: #d8e3e0;
-  --color-ink: #14262b;
-  --color-ink-soft: #4a5f65;
+  --color-surface-muted: #f1f5f9;
+  --color-line: #e2e8f0;
+  --color-line-subtle: #cbd5e1;
+  --color-ink: #0f172a;
+  --color-ink-soft: #475569;
+  --color-ink-subtle: #64748b;
 
-  --color-brand: #0f766e;
-  --color-brand-strong: #0b544e;
-  --color-brand-soft: #e3f2ef;
-  --color-accent: #6d5bd0;
-  --color-accent-soft: #eeebfb;
+  --color-brand: #0d9488;
+  --color-brand-strong: #0f766e;
+  --color-brand-dark: #115e59;
+  --color-brand-soft: #f0fdfa;
+  --color-brand-border: #99f6e4;
 
-  --color-good: #14663f;
-  --color-good-soft: #e3f5eb;
-  --color-warn: #8a5300;
-  --color-warn-soft: #fdf1de;
-  --color-alert: #a3212c;
-  --color-alert-soft: #fdeaec;
+  --color-accent: #4f46e5;
+  --color-accent-soft: #eef2ff;
 
-  --radius-card: 1.25rem;
+  --color-good: #059669;
+  --color-good-soft: #ecfdf5;
+  --color-warn: #d97706;
+  --color-warn-soft: #fffbeb;
+  --color-alert: #dc2626;
+  --color-alert-soft: #fef2f2;
+
+  --radius-card: 1rem;
 }
 
 html {
-  font-size: 17px;
+  font-size: 16px;
   scroll-behavior: smooth;
 }
 
-/* Modo idoso: aumenta toda a escala (Tailwind usa rem) */
+/* Modo idoso: amplia escala proporcionalmente para facilitar leitura e toque */
 html[data-elder="true"] {
-  font-size: 21px;
+  font-size: 20px;
 }
 
-/* Alto contraste: sobrescreve apenas os tokens */
+/* Alto contraste estrito para máxima legibilidade */
 html[data-contrast="true"] {
   --color-canvas: #ffffff;
   --color-surface: #ffffff;
-  --color-surface-muted: #f0f0f0;
-  --color-line: #1a1a1a;
+  --color-surface-muted: #f4f4f5;
+  --color-line: #18181b;
+  --color-line-subtle: #09090b;
   --color-ink: #000000;
-  --color-ink-soft: #1f1f1f;
-  --color-brand: #00504a;
-  --color-brand-strong: #003330;
+  --color-ink-soft: #18181b;
+  --color-ink-subtle: #27272a;
+
+  --color-brand: #005f56;
+  --color-brand-strong: #003f39;
+  --color-brand-dark: #002925;
   --color-brand-soft: #ffffff;
-  --color-accent: #3a2d8f;
+  --color-brand-border: #000000;
+
+  --color-accent: #312e81;
   --color-accent-soft: #ffffff;
-  --color-good: #00441f;
+
+  --color-good: #064e3b;
   --color-good-soft: #ffffff;
-  --color-warn: #5a3600;
+  --color-warn: #78350f;
   --color-warn-soft: #ffffff;
-  --color-alert: #7a0010;
+  --color-alert: #7f1d1d;
   --color-alert-soft: #ffffff;
 }
 
 html[data-contrast="true"] .card,
 html[data-contrast="true"] .field-control {
   border-width: 2px;
+  border-color: #000000;
 }
 
-/* Modo simplificado: alvos de toque maiores e textos mais diretos */
+/* Modo simplificado: foco nas ações essenciais e alvos maiores */
 html[data-simple="true"] button,
 html[data-simple="true"] a[href],
 html[data-simple="true"] .field-control {
@@ -84,11 +95,12 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Foco sempre visível e espesso — requisito WCAG 2.4.7 / 2.4.11 */
+/* Foco visível, nítido e contrastante — WCAG 2.4.7 / 2.4.11 */
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline: 3px solid var(--color-accent);
+  outline: 3px solid var(--color-brand);
   outline-offset: 2px;
   border-radius: 0.5rem;
 }
@@ -98,10 +110,12 @@ body {
   left: -9999px;
   top: 0;
   z-index: 100;
-  background: var(--color-brand-strong);
-  color: #fff;
+  background: var(--color-brand-dark);
+  color: #ffffff;
   padding: 0.75rem 1.25rem;
+  font-weight: 600;
   border-radius: 0 0 0.75rem 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 .skip-link:focus {
   left: 0;
@@ -111,6 +125,8 @@ body {
   background: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .field-control {
@@ -118,13 +134,20 @@ body {
   border: 1px solid var(--color-line);
   background: var(--color-surface);
   color: var(--color-ink);
-  border-radius: 0.85rem;
-  padding: 0.75rem 0.9rem;
-  font-size: 1rem;
-  min-height: 3rem;
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.95rem;
+  font-size: 0.975rem;
+  min-height: 2.85rem;
+  transition: all 0.15s ease;
+}
+.field-control:focus {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  outline: none;
 }
 .field-control::placeholder {
-  color: #7b8b90;
+  color: var(--color-ink-subtle);
+  opacity: 0.8;
 }
 .field-control[aria-invalid="true"] {
   border-color: var(--color-alert);
@@ -142,14 +165,30 @@ body {
 }
 
 @media print {
-  .no-print {
+  .no-print,
+  nav,
+  header,
+  .skip-link,
+  button,
+  form {
     display: none !important;
   }
   body {
-    background: #fff;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt !important;
   }
   .card {
     break-inside: avoid;
-    border-color: #999;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  h1, h2, h3 {
+    color: #0f172a !important;
+    break-after: avoid;
+  }
+  section {
+    break-inside: avoid;
   }
 }

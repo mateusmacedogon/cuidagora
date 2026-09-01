@@ -1,4 +1,16 @@
 import type { Metadata } from "next";
+import {
+  Activity,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  FileText,
+  Filter,
+  List,
+  Pill,
+  Search,
+  Smile,
+} from "lucide-react";
 
 import { Card, CardTitle, PageHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/Feedback";
@@ -7,14 +19,33 @@ import { requireUser } from "@/lib/auth/session";
 import { addDaysIso, formatDate, formatTime, todayIso } from "@/lib/date";
 import { TIMELINE_CATEGORIES, timelineMeta } from "@/lib/domain";
 
-export const metadata: Metadata = { title: "Minha Linha do Tempo — CuidAgora" };
+export const metadata: Metadata = { title: "Linha do Tempo e Histórico — CuidAgora" };
 
 const PERIODS = [
   { value: "hoje", label: "Hoje" },
   { value: "7", label: "Últimos 7 dias" },
   { value: "30", label: "Últimos 30 dias" },
-  { value: "custom", label: "Período que eu escolher" },
+  { value: "custom", label: "Período personalizado" },
 ];
+
+function getCategoryIcon(key: string) {
+  switch (key) {
+    case "task":
+      return <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />;
+    case "medication":
+      return <Pill className="size-4 text-teal-600 shrink-0" />;
+    case "symptom":
+      return <FileText className="size-4 text-rose-600 shrink-0" />;
+    case "checkin":
+      return <Smile className="size-4 text-indigo-600 shrink-0" />;
+    case "measurement":
+      return <Activity className="size-4 text-blue-600 shrink-0" />;
+    case "appointment":
+      return <Calendar className="size-4 text-purple-600 shrink-0" />;
+    default:
+      return <Clock className="size-4 text-slate-500 shrink-0" />;
+  }
+}
 
 function resolvePeriod(period: string, from?: string, to?: string) {
   const today = todayIso();
@@ -58,26 +89,26 @@ export default async function TimelinePage({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        icon="🕓"
-        title="Minha Linha do Tempo"
-        description="Tudo o que você registrou, em ordem, do mais recente para o mais antigo."
+        icon={<Clock className="size-7 text-teal-700" />}
+        title="Linha do Tempo Unificada"
+        description="Histórico cronológico de todos os eventos, conclusões de tarefas e medições registradas."
       />
 
       <Card>
-        <CardTitle icon="🔎" level={2}>
-          Filtrar
+        <CardTitle icon={<Filter className="size-5 text-teal-700" />} level={2}>
+          Filtros de Pesquisa
         </CardTitle>
         <form method="get" className="flex flex-col gap-5">
           <fieldset className="flex flex-col gap-2">
-            <legend className="text-base font-semibold">Período</legend>
+            <legend className="text-sm font-bold text-slate-900">Período de visualização</legend>
             <div className="flex flex-wrap gap-2">
               {PERIODS.map((item) => (
                 <label
                   key={item.value}
-                  className={`min-h-12 cursor-pointer rounded-full border-2 px-5 py-2.5 font-semibold ${
+                  className={`min-h-10 cursor-pointer rounded-xl border px-4 py-2 text-xs sm:text-sm font-semibold transition-colors shadow-2xs ${
                     period === item.value
-                      ? "border-[var(--color-brand)] bg-[var(--color-brand-soft)]"
-                      : "border-[var(--color-line)]"
+                      ? "border-teal-300 bg-teal-50 text-teal-900 font-bold"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                   }`}
                 >
                   <input
@@ -95,29 +126,29 @@ export default async function TimelinePage({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="de" className="text-base font-semibold">
-                De (para período escolhido)
+              <label htmlFor="de" className="text-xs sm:text-sm font-semibold text-slate-700">
+                Data inicial
               </label>
-              <input id="de" name="de" type="date" defaultValue={params.de ?? fromIso} className="field-control" />
+              <input id="de" name="de" type="date" defaultValue={params.de ?? fromIso} className="field-control mt-1" />
             </div>
             <div>
-              <label htmlFor="ate" className="text-base font-semibold">
-                Até
+              <label htmlFor="ate" className="text-xs sm:text-sm font-semibold text-slate-700">
+                Data final
               </label>
-              <input id="ate" name="ate" type="date" defaultValue={params.ate ?? toIso} className="field-control" />
+              <input id="ate" name="ate" type="date" defaultValue={params.ate ?? toIso} className="field-control mt-1" />
             </div>
           </div>
 
           <fieldset className="flex flex-col gap-2">
-            <legend className="text-base font-semibold">Categorias (deixe vazio para ver tudo)</legend>
+            <legend className="text-sm font-bold text-slate-900">Categorias de eventos</legend>
             <div className="flex flex-wrap gap-2">
               {TIMELINE_CATEGORIES.map((category) => (
                 <label
                   key={category.value}
-                  className={`min-h-12 cursor-pointer rounded-full border-2 px-4 py-2.5 font-semibold ${
+                  className={`min-h-9 flex items-center gap-1.5 cursor-pointer rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors shadow-2xs ${
                     selectedCategories.includes(category.value)
-                      ? "border-[var(--color-brand)] bg-[var(--color-brand-soft)]"
-                      : "border-[var(--color-line)]"
+                      ? "border-teal-300 bg-teal-50 text-teal-900 font-bold"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                   }`}
                 >
                   <input
@@ -127,9 +158,8 @@ export default async function TimelinePage({
                     defaultChecked={selectedCategories.includes(category.value)}
                     className="sr-only"
                   />
-                  <span aria-hidden="true">{category.icon} </span>
-                  {category.label}
-                  {selectedCategories.includes(category.value) ? <span className="sr-only">(selecionado)</span> : null}
+                  {getCategoryIcon(category.value)}
+                  <span>{category.label}</span>
                 </label>
               ))}
             </div>
@@ -138,42 +168,52 @@ export default async function TimelinePage({
           <div>
             <button
               type="submit"
-              className="min-h-12 rounded-full bg-[var(--color-brand)] px-6 py-3 font-semibold text-white"
+              className="inline-flex items-center gap-2 min-h-10 rounded-xl bg-teal-600 px-5 py-2 text-sm font-bold text-white hover:bg-teal-700 transition-colors shadow-xs cursor-pointer"
             >
-              🔎 Aplicar filtros
+              <Search className="size-4" />
+              Aplicar filtros
             </button>
           </div>
         </form>
       </Card>
 
       <Card>
-        <CardTitle icon="📜" description={`De ${formatDate(fromIso)} até ${formatDate(toIso)} · ${events.length} registro(s)`}>
-          Registros
+        <CardTitle
+          icon={<List className="size-5 text-teal-700" />}
+          description={`De ${formatDate(fromIso)} até ${formatDate(toIso)} · ${events.length} registro(s) encontrado(s)`}
+        >
+          Eventos Registrados
         </CardTitle>
 
         {events.length === 0 ? (
           <EmptyState
-            icon="🌱"
-            title="Nada registrado neste período"
-            description="Quando você marcar cuidados, registrar medições ou fazer o check-in, tudo aparece aqui."
-            actionLabel="Ir para os cuidados de hoje"
+            icon={<Clock className="size-8 text-teal-600" />}
+            title="Nenhum evento registrado no intervalo"
+            description="Ao concluir tarefas, aferir pressão ou salvar check-ins, os registros cronológicos aparecem aqui."
+            actionLabel="Acessar rotina de cuidados"
             actionHref="/cuidados"
           />
         ) : (
           <ol className="flex flex-col gap-6">
             {[...grouped.entries()].map(([day, dayEvents]) => (
               <li key={day}>
-                <h3 className="mb-2 text-lg font-bold">{day}</h3>
-                <ul className="flex flex-col gap-2 border-l-4 border-[var(--color-brand-soft)] pl-4">
+                <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-slate-500">{day}</h3>
+                <ul className="flex flex-col gap-2.5 border-l-2 border-teal-200 pl-4">
                   {dayEvents.map((event) => {
                     const meta = timelineMeta(event.category);
                     return (
-                      <li key={event.id} className="rounded-2xl border border-[var(--color-line)] p-3">
-                        <p className="font-semibold">
-                          <span aria-hidden="true">{meta.icon} </span>
-                          <span className="tabular-nums">{formatTime(event.occurredAt)}</span> — {event.title}
-                        </p>
-                        <p className="text-sm text-[var(--color-ink-soft)]">
+                      <li
+                        key={event.id}
+                        className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs hover:border-slate-300 transition-colors"
+                      >
+                        <div className="flex items-center gap-2 font-bold text-slate-900 text-sm sm:text-base">
+                          {getCategoryIcon(event.category)}
+                          <span className="tabular-nums font-semibold text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                            {formatTime(event.occurredAt)}
+                          </span>
+                          <span>{event.title}</span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1 pl-6">
                           {meta.label}
                           {event.description ? ` · ${event.description}` : ""}
                         </p>

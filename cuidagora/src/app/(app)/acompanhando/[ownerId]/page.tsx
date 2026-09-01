@@ -1,5 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  Activity,
+  AlertCircle,
+  ArrowLeft,
+  Calendar,
+  Clock,
+  Eye,
+  FileText,
+  Lock,
+  Pill,
+  ShieldAlert,
+} from "lucide-react";
 
 import { Card, CardTitle, PageHeader } from "@/components/ui/Card";
 import { Alert, Badge, EmptyState } from "@/components/ui/Feedback";
@@ -17,7 +29,7 @@ import { resolveAccess } from "@/lib/permissions";
 import { addDaysIso, formatDateTime, formatTime, todayIso } from "@/lib/date";
 import { frequencyLabel, intensityLabel, timelineMeta } from "@/lib/domain";
 
-export const metadata: Metadata = { title: "Acompanhando — CuidAgora" };
+export const metadata: Metadata = { title: "Acompanhamento Clínico — CuidAgora" };
 
 export default async function CaregiverDetailPage({
   params,
@@ -30,12 +42,13 @@ export default async function CaregiverDetailPage({
   if (!access) {
     return (
       <div className="flex flex-col gap-4">
-        <PageHeader icon="🚫" title="Acesso não disponível" />
-        <Alert tone="warning" title="Você não tem permissão">
-          Esta pessoa não compartilhou informações com a sua conta, ou o acesso foi removido.
+        <PageHeader icon={<ShieldAlert className="size-7 text-rose-600" />} title="Acesso Não Autorizado" />
+        <Alert tone="warning" title="Permissão ausente">
+          Este paciente não compartilhou dados com sua conta ou a autorização foi revogada.
         </Alert>
-        <Link href="/acompanhando" className="font-semibold underline">
-          ← Voltar
+        <Link href="/acompanhando" className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal-700 hover:underline">
+          <ArrowLeft className="size-4" />
+          Voltar para a lista
         </Link>
       </div>
     );
@@ -64,23 +77,29 @@ export default async function CaregiverDetailPage({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        icon="👀"
-        title={`Acompanhando ${access.ownerName}`}
-        description="Visualização somente leitura. Você não pode alterar nenhum registro."
+        icon={<Eye className="size-7 text-teal-700" />}
+        title={`Acompanhamento de ${access.ownerName}`}
+        description="Painel de leitura compartilhada. Seus privilégios não permitem edição ou remoção de dados."
       />
-      <Link href="/acompanhando" className="font-semibold underline">
-        ← Voltar para a lista
-      </Link>
+      <div>
+        <Link
+          href="/acompanhando"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal-700 hover:text-teal-900 hover:underline"
+        >
+          <ArrowLeft className="size-4" />
+          Voltar para lista de acompanhados
+        </Link>
+      </div>
 
-      <Alert tone="info" title="Modo cuidador">
-        Você vê apenas o que {access.ownerName} autorizou. A qualquer momento essa autorização pode mudar.
+      <Alert tone="info" title="Painel em Modo Cuidador">
+        Exibindo apenas os módulos autorizados por {access.ownerName}.
       </Alert>
 
       {nothingShared ? (
         <EmptyState
-          icon="🔒"
-          title="Nada foi liberado ainda"
-          description="A pessoa autorizou o acesso, mas ainda não marcou quais informações você pode ver."
+          icon={<Lock className="size-8 text-slate-500" />}
+          title="Nenhuma permissão específica atribuída"
+          description="O acesso foi liberado, mas o paciente ainda não selecionou quais categorias compartilhar."
         />
       ) : null}
 
@@ -92,16 +111,28 @@ export default async function CaregiverDetailPage({
 
       {permissions.medications ? (
         <Card>
-          <CardTitle icon="💊">Medicamentos em uso</CardTitle>
+          <CardTitle icon={<Pill className="size-5 text-teal-700" />}>
+            Medicamentos em Uso
+          </CardTitle>
           {medications.length === 0 ? (
-            <EmptyState icon="💊" title="Nenhum medicamento cadastrado" description="Ainda não há medicamentos na lista." />
+            <EmptyState
+              icon={<Pill className="size-8 text-teal-600" />}
+              title="Nenhum medicamento cadastrado"
+              description="Não há prescrições ativas cadastradas no momento."
+            />
           ) : (
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col gap-2.5">
               {medications.map((medication) => (
-                <li key={medication.id} className="rounded-2xl border border-[var(--color-line)] p-3">
-                  <strong>{medication.name}</strong>
-                  {medication.dose ? ` — ${medication.dose}` : ""} · {frequencyLabel(medication.frequency)}
-                  {medication.times.length > 0 ? ` · ${medication.times.join(", ")}` : ""}
+                <li key={medication.id} className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs">
+                  <strong className="text-base text-slate-900">{medication.name}</strong>
+                  <span className="text-slate-600">
+                    {medication.dose ? ` — ${medication.dose}` : ""} · {frequencyLabel(medication.frequency)}
+                  </span>
+                  {medication.times.length > 0 ? (
+                    <span className="block text-xs text-slate-500 mt-1">
+                      Horários: {medication.times.join(", ")}
+                    </span>
+                  ) : null}
                 </li>
               ))}
             </ul>
@@ -111,21 +142,30 @@ export default async function CaregiverDetailPage({
 
       {permissions.measurements ? (
         <Card>
-          <CardTitle icon="🩺" description="Últimos 7 dias.">
-            Medições
+          <CardTitle
+            icon={<Activity className="size-5 text-teal-700" />}
+            description="Leituras registradas nos últimos 7 dias."
+          >
+            Sinais Vitais e Medições
           </CardTitle>
           {measurementsList.length === 0 ? (
-            <EmptyState icon="🩺" title="Sem medições recentes" description="Nada foi registrado nos últimos 7 dias." />
+            <EmptyState
+              icon={<Activity className="size-8 text-teal-600" />}
+              title="Sem medições recentes"
+              description="Nenhuma aferição foi realizada nos últimos 7 dias."
+            />
           ) : (
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col gap-2.5">
               {measurementsList.map((item) => (
-                <li key={item.id} className="rounded-2xl border border-[var(--color-line)] p-3">
-                  {item.kind === "blood_pressure"
-                    ? `Pressão: ${item.systolic} por ${item.diastolic} mmHg`
-                    : item.kind === "glucose"
-                      ? `Glicemia: ${Number(item.value)} mg/dL`
-                      : `Água: ${Number(item.value)} ml`}
-                  <span className="block text-sm text-[var(--color-ink-soft)]">
+                <li key={item.id} className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs">
+                  <strong className="text-base text-slate-900 tabular-nums">
+                    {item.kind === "blood_pressure"
+                      ? `Pressão: ${item.systolic} / ${item.diastolic} mmHg`
+                      : item.kind === "glucose"
+                        ? `Glicemia: ${Number(item.value)} mg/dL`
+                        : `Hidratação: ${Number(item.value)} ml`}
+                  </strong>
+                  <span className="block text-xs text-slate-500 mt-0.5">
                     {formatDateTime(item.measuredAt)}
                   </span>
                 </li>
@@ -137,20 +177,29 @@ export default async function CaregiverDetailPage({
 
       {permissions.symptoms ? (
         <Card>
-          <CardTitle icon="📝" description="Últimos 7 dias.">
-            Sintomas
+          <CardTitle
+            icon={<FileText className="size-5 text-teal-700" />}
+            description="Registros dos últimos 7 dias."
+          >
+            Sintomas e Desconfortos
           </CardTitle>
           {symptomList.length === 0 ? (
-            <EmptyState icon="📝" title="Sem sintomas registrados" description="Nada foi anotado nos últimos 7 dias." />
+            <EmptyState
+              icon={<FileText className="size-8 text-teal-600" />}
+              title="Nenhum sintoma registrado"
+              description="Nenhum mal-estar foi reportado recentemente."
+            />
           ) : (
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col gap-2.5">
               {symptomList.map((symptom) => (
-                <li key={symptom.id} className="rounded-2xl border border-[var(--color-line)] p-3">
-                  <strong>{symptom.name}</strong> —{" "}
-                  <Badge tone="info" icon="📊">
-                    {intensityLabel(symptom.intensity)}
-                  </Badge>
-                  <span className="block text-sm text-[var(--color-ink-soft)]">
+                <li key={symptom.id} className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <strong className="text-slate-900">{symptom.name}</strong>
+                    <Badge tone="info" icon={<AlertCircle className="size-3" />}>
+                      {intensityLabel(symptom.intensity)}
+                    </Badge>
+                  </div>
+                  <span className="block text-xs text-slate-500 mt-1">
                     {formatDateTime(symptom.occurredAt)}
                   </span>
                 </li>
@@ -162,34 +211,49 @@ export default async function CaregiverDetailPage({
 
       {permissions.appointments ? (
         <Card>
-          <CardTitle icon="📅">Próxima consulta</CardTitle>
+          <CardTitle icon={<Calendar className="size-5 text-teal-700" />}>
+            Próximo Agendamento Médico
+          </CardTitle>
           {appointment ? (
-            <p className="text-lg">
-              <strong>{appointment.specialty}</strong> — {formatDateTime(appointment.scheduledAt)}
-              {appointment.location ? ` · ${appointment.location}` : ""}
-            </p>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs">
+              <p className="text-base font-bold text-slate-900">{appointment.specialty}</p>
+              <p className="text-xs text-slate-600 mt-0.5">{formatDateTime(appointment.scheduledAt)}</p>
+              {appointment.location ? (
+                <p className="text-xs text-slate-500 mt-0.5">Local: {appointment.location}</p>
+              ) : null}
+            </div>
           ) : (
-            <EmptyState icon="📅" title="Nenhuma consulta marcada" description="Não há consultas futuras cadastradas." />
+            <EmptyState
+              icon={<Calendar className="size-8 text-teal-600" />}
+              title="Nenhuma consulta futura agendada"
+              description="Não constam agendamentos para os próximos dias."
+            />
           )}
         </Card>
       ) : null}
 
       {permissions.timeline ? (
         <Card>
-          <CardTitle icon="🕓" description="Últimos 7 dias.">
-            Linha do tempo
+          <CardTitle
+            icon={<Clock className="size-5 text-teal-700" />}
+            description="Histórico de eventos nos últimos 7 dias."
+          >
+            Linha do Tempo Recente
           </CardTitle>
           {timeline.length === 0 ? (
-            <EmptyState icon="🕓" title="Sem registros recentes" description="Nada foi registrado nos últimos 7 dias." />
+            <EmptyState
+              icon={<Clock className="size-8 text-teal-600" />}
+              title="Sem histórico recente"
+              description="Nenhuma atividade realizada no período."
+            />
           ) : (
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col gap-2.5">
               {timeline.map((event) => {
                 const meta = timelineMeta(event.category);
                 return (
-                  <li key={event.id} className="rounded-2xl border border-[var(--color-line)] p-3">
-                    <span aria-hidden="true">{meta.icon} </span>
-                    <strong>{event.title}</strong>
-                    <span className="block text-sm text-[var(--color-ink-soft)]">
+                  <li key={event.id} className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs">
+                    <strong className="text-sm text-slate-900">{event.title}</strong>
+                    <span className="block text-xs text-slate-500 mt-0.5">
                       {formatDateTime(event.occurredAt)} · {meta.label}
                       {event.description ? ` · ${event.description}` : ""}
                     </span>
@@ -198,7 +262,6 @@ export default async function CaregiverDetailPage({
               })}
             </ul>
           )}
-          <p className="sr-only">Horário do último registro: {timeline[0] ? formatTime(timeline[0].occurredAt) : "nenhum"}</p>
         </Card>
       ) : null}
     </div>

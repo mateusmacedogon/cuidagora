@@ -4,7 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
 import { and, eq, gt, isNull } from "drizzle-orm";
 
-import { db } from "@/db";
+import { db, ensureDbReady } from "@/db";
 import { passwordResetTokens, userPreferences, users } from "@/db/schema";
 import { createSession, destroySession } from "@/lib/auth/session";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
@@ -30,14 +30,17 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
   const raw = formToObject(formData);
   const parsed = signUpSchema.safeParse({
     ...raw,
+    email: typeof raw.email === "string" ? raw.email.trim().toLowerCase() : raw.email,
     acceptedTerms: formData.get("acceptedTerms") === "on",
   });
   if (!parsed.success) return zodErrorState(parsed.error);
 
   const { name, email, password, accountType } = parsed.data;
+  const normalizedEmail = email.trim().toLowerCase();
 
   try {
-    const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1);
+    await ensureDbReady();
+    const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, normalizedEmail)).limit(1);
     if (existing.length > 0) {
       return errorState("Este e-mail já tem uma conta.", {
         email: "Já existe uma conta com este e-mail. Tente entrar.",
@@ -47,7 +50,7 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
     const passwordHash = await hashPassword(password);
     const inserted = await db
       .insert(users)
-      .values({ name, email, passwordHash, accountType })
+      .values({ name, email: normalizedEmail, passwordHash, accountType })
       .returning({ id: users.id });
 
     const user = inserted[0];
@@ -58,7 +61,7 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
   } catch (error) {
     console.error("Erro ao criar conta:", error);
     return errorState(
-      "Não foi possível conectar ao banco de dados. Verifique se o DATABASE_URL está configurado no Vercel e se as tabelas foram criadas.",
+      "Não foi possível salvar os dados. Tente novamente em instantes.",
     );
   }
 
@@ -66,23 +69,28 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
 }
 
 export async function signInAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const parsed = signInSchema.safeParse(formToObject(formData));
+  const raw = formToObject(formData);
+  const parsed = signInSchema.safeParse({
+    ...raw,
+    email: typeof raw.email === "string" ? raw.email.trim().toLowerCase() : raw.email,
+  });
   if (!parsed.success) return zodErrorState(parsed.error);
 
   let successUserId: string | null = null;
+  const normalizedEmail = parsed.data.email.trim().toLowerCase();
 
   try {
+    await ensureDbReady();
     const rows = await db
       .select({ id: users.id, passwordHash: users.passwordHash })
       .from(users)
-      .where(and(eq(users.email, parsed.data.email), isNull(users.deletedAt)))
+      .where(and(eq(users.email, normalizedEmail), isNull(users.deletedAt)))
       .limit(1);
 
     const account = rows[0];
-    // Mensagem genérica: não revelamos se o e-mail existe.
-    const genericError = errorState("E-mail ou senha incorretos. Confira e tente de novo.");
+    const genericError = errorState("E-mail ou senha incorretos. Confira e tente novamente.");
     if (!account) {
-      await hashPassword(parsed.data.password); // custo constante contra enumeração
+      await hashPassword(parsed.data.password);
       return genericError;
     }
 
@@ -94,8 +102,59 @@ export async function signInAction(_prev: ActionState, formData: FormData): Prom
   } catch (error) {
     console.error("Erro ao fazer login:", error);
     return errorState(
-      "Não foi possível conectar ao banco de dados. Verifique a configuração do DATABASE_URL no Vercel.",
+      "Não foi possível concluir o login agora. Tente novamente.",
     );
+  }
+
+  if (successUserId) {
+    redirect("/inicio");
+  }
+
+  return errorState("E-mail ou senha incorretos. Confira e tente novamente.");
+}
+
+export async function demoSignInAction(role: "maria" | "joao"): Promise<ActionState | void> {
+  let successUserId: string | null = null;
+  try {
+    await ensureDbReady();
+    const targetEmail = role === "joao" ? "joao@exemplo.com" : "maria@exemplo.com";
+
+    let rows = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.email, targetEmail), isNull(users.deletedAt)))
+      .limit(1);
+
+    if (!rows[0]) {
+      const name =
+        role === "joao"
+          ? "João Fictício (cuidador)"
+          : "Maria Aparecida (demonstração)";
+      const accountType = role === "joao" ? "caregiver" : "person";
+      const passwordHash = await hashPassword("cuidagora123");
+      const inserted = await db
+        .insert(users)
+        .values({ name, email: targetEmail, passwordHash, accountType })
+        .returning({ id: users.id });
+
+      if (inserted[0]) {
+        await db
+          .insert(userPreferences)
+          .values({ userId: inserted[0].id })
+          .onConflictDoNothing();
+        rows = inserted;
+      }
+    }
+
+    if (rows[0]) {
+      await createSession(rows[0].id);
+      successUserId = rows[0].id;
+    } else {
+      return errorState("Não foi possível carregar a conta de demonstração.");
+    }
+  } catch (e) {
+    console.error("Erro ao autenticar demonstração:", e);
+    return errorState("Falha temporária ao conectar a conta de demonstração.");
   }
 
   if (successUserId) {
@@ -112,22 +171,25 @@ export async function signOutAction(): Promise<void> {
   redirect("/entrar");
 }
 
-/**
- * MVP sem serviço de e-mail: o link de redefinição é exibido na tela.
- * Em produção este link deve ser enviado por e-mail e nunca mostrado.
- */
 export async function requestPasswordResetAction(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const parsed = forgotPasswordSchema.safeParse(formToObject(formData));
+  const raw = formToObject(formData);
+  const parsed = forgotPasswordSchema.safeParse({
+    ...raw,
+    email: typeof raw.email === "string" ? raw.email.trim().toLowerCase() : raw.email,
+  });
   if (!parsed.success) return zodErrorState(parsed.error);
 
+  const normalizedEmail = parsed.data.email.trim().toLowerCase();
+
   try {
+    await ensureDbReady();
     const rows = await db
       .select({ id: users.id })
       .from(users)
-      .where(and(eq(users.email, parsed.data.email), isNull(users.deletedAt)))
+      .where(and(eq(users.email, normalizedEmail), isNull(users.deletedAt)))
       .limit(1);
 
     const account = rows[0];
@@ -146,12 +208,12 @@ export async function requestPasswordResetAction(
 
     return {
       status: "success",
-      message: `Link de recuperação criado (válido por 1 hora): /redefinir-senha?token=${token}`,
+      message: `Link de recuperação gerado (válido por 1 hora): /redefinir-senha?token=${token}`,
       errors: {},
     };
   } catch (error) {
     console.error("Erro ao solicitar redefinição:", error);
-    return errorState("Não foi possível conectar ao banco de dados.");
+    return errorState("Não foi possível processar a recuperação agora.");
   }
 }
 
@@ -164,6 +226,7 @@ export async function resetPasswordAction(
 
   const id = tokenHash(parsed.data.token);
   try {
+    await ensureDbReady();
     const rows = await db
       .select({ id: passwordResetTokens.id, userId: passwordResetTokens.userId })
       .from(passwordResetTokens)
@@ -186,9 +249,9 @@ export async function resetPasswordAction(
       .set({ usedAt: new Date() })
       .where(eq(passwordResetTokens.id, token.id));
 
-    return successState("Senha alterada. Agora você já pode entrar.");
+    return successState("Senha alterada com sucesso! Agora você já pode entrar.");
   } catch (error) {
     console.error("Erro ao redefinir senha:", error);
-    return errorState("Não foi possível conectar ao banco de dados.");
+    return errorState("Não foi possível salvar a nova senha.");
   }
 }

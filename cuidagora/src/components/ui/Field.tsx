@@ -1,4 +1,5 @@
 import type { ComponentProps, ReactNode } from "react";
+import { AlertCircle } from "lucide-react";
 
 type BaseProps = {
   label: string;
@@ -12,26 +13,30 @@ type BaseProps = {
 function FieldWrapper({ label, name, hint, error, required, children }: BaseProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={name} className="text-base font-semibold text-[var(--color-ink)]">
+      <label htmlFor={name} className="text-sm sm:text-base font-semibold text-[var(--color-ink)]">
         {label}
         {required ? (
-          <span className="ml-1 text-[var(--color-alert)]" aria-hidden="true">
+          <span className="ml-1 text-rose-500 font-bold" aria-hidden="true">
             *
           </span>
         ) : (
-          <span className="ml-2 text-sm font-normal text-[var(--color-ink-soft)]">(opcional)</span>
+          <span className="ml-2 text-xs sm:text-sm font-normal text-slate-500">(opcional)</span>
         )}
       </label>
       {hint ? (
-        <p id={`${name}-hint`} className="text-sm text-[var(--color-ink-soft)]">
+        <p id={`${name}-hint`} className="text-xs sm:text-sm text-slate-500 leading-normal">
           {hint}
         </p>
       ) : null}
       {children}
       {error ? (
-        <p id={`${name}-error`} role="alert" className="flex items-center gap-1.5 text-sm font-semibold text-[var(--color-alert)]">
-          <span aria-hidden="true">⚠️</span>
-          {error}
+        <p
+          id={`${name}-error`}
+          role="alert"
+          className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-rose-600 mt-0.5"
+        >
+          <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
+          <span>{error}</span>
         </p>
       ) : null}
     </div>
@@ -129,7 +134,7 @@ export function CheckboxField({
   ...rest
 }: Omit<BaseProps, "children"> & ComponentProps<"input">) {
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
+    <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-slate-300">
       <input
         {...rest}
         type="checkbox"
@@ -137,20 +142,25 @@ export function CheckboxField({
         name={name}
         defaultChecked={defaultChecked}
         aria-describedby={describedBy(name, hint, error)}
-        className="mt-1 h-6 w-6 shrink-0 accent-[var(--color-brand)]"
+        className="mt-1 size-5 shrink-0 rounded border-slate-300 accent-teal-600 focus:ring-teal-500 cursor-pointer"
       />
       <div>
-        <label htmlFor={name} className="font-semibold">
+        <label htmlFor={name} className="text-sm sm:text-base font-semibold text-slate-900 cursor-pointer select-none">
           {label}
         </label>
         {hint ? (
-          <p id={`${name}-hint`} className="text-sm text-[var(--color-ink-soft)]">
+          <p id={`${name}-hint`} className="text-xs sm:text-sm text-slate-500 mt-0.5">
             {hint}
           </p>
         ) : null}
         {error ? (
-          <p id={`${name}-error`} role="alert" className="text-sm font-semibold text-[var(--color-alert)]">
-            ⚠️ {error}
+          <p
+            id={`${name}-error`}
+            role="alert"
+            className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-rose-600 mt-1"
+          >
+            <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
+            <span>{error}</span>
           </p>
         ) : null}
       </div>
@@ -171,12 +181,13 @@ export function Fieldset({
 }) {
   return (
     <fieldset className="flex flex-col gap-3">
-      <legend className="text-base font-semibold">{legend}</legend>
-      {hint ? <p className="text-sm text-[var(--color-ink-soft)]">{hint}</p> : null}
+      <legend className="text-base font-semibold text-slate-900">{legend}</legend>
+      {hint ? <p className="text-xs sm:text-sm text-slate-500">{hint}</p> : null}
       {children}
       {error ? (
-        <p role="alert" className="text-sm font-semibold text-[var(--color-alert)]">
-          ⚠️ {error}
+        <p role="alert" className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-rose-600">
+          <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
+          <span>{error}</span>
         </p>
       ) : null}
     </fieldset>

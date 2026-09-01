@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Activity, Droplets, LineChart, Target, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Activity, ArrowLeft, Droplets, LineChart, Target, Trash2 } from "lucide-react";
 
 import { Card, CardTitle, PageHeader } from "@/components/ui/Card";
 import { EmptyState, SafetyNotice } from "@/components/ui/Feedback";
@@ -30,6 +31,16 @@ export default async function MeasurementsPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <div>
+        <Link
+          href="/cuidados"
+          className="inline-flex items-center gap-2 text-sm font-bold text-teal-700 hover:text-teal-900 transition-colors"
+        >
+          <ArrowLeft className="size-4" />
+          Voltar para Plano de Cuidados
+        </Link>
+      </div>
+
       <PageHeader
         icon={<Activity className="size-7 text-teal-700" />}
         title="Medições e Sinais Vitais"

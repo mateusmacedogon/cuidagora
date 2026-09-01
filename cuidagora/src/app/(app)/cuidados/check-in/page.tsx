@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Smile, SmilePlus } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, Smile, SmilePlus } from "lucide-react";
 
 import { SpeakButton } from "@/components/a11y/SpeakButton";
 import { Card, CardTitle, PageHeader } from "@/components/ui/Card";
@@ -19,6 +20,16 @@ export default async function CheckinPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <div>
+        <Link
+          href="/cuidados"
+          className="inline-flex items-center gap-2 text-sm font-bold text-teal-700 hover:text-teal-900 transition-colors"
+        >
+          <ArrowLeft className="size-4" />
+          Voltar para Plano de Cuidados
+        </Link>
+      </div>
+
       <PageHeader
         icon={<Smile className="size-7 text-teal-700" />}
         title="Check-in Diário de Bem-estar"

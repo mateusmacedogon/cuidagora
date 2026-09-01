@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 
-import { db } from "@/db";
+import { db, ensureDbReady } from "@/db";
 import {
   careTasks,
   dailyCheckins,
@@ -43,6 +43,7 @@ function refreshCareViews() {
   revalidatePath("/cuidados/check-in");
   revalidatePath("/historico");
   revalidatePath("/resumo");
+  revalidatePath("/", "layout");
 }
 
 /* ------------------------------ Medicamentos ------------------------------- */
@@ -52,6 +53,7 @@ export async function saveMedicationAction(
   formData: FormData,
 ): Promise<ActionState> {
   const user = await requireUser();
+  await ensureDbReady();
   const raw = formToObject(formData);
   const times = formData.getAll("times[]").map(String).filter(Boolean);
 
@@ -67,13 +69,6 @@ export async function saveMedicationAction(
 
   try {
     if (data.id) {
-      const owned = await db
-        .select({ id: medications.id })
-        .from(medications)
-        .where(and(eq(medications.id, data.id), eq(medications.userId, user.id)))
-        .limit(1);
-      if (owned.length === 0) return errorState("Medicamento não encontrado.");
-
       await db
         .update(medications)
         .set({
@@ -92,8 +87,18 @@ export async function saveMedicationAction(
         .insert(medicationSchedules)
         .values(data.times.map((time) => ({ medicationId: data.id as string, timeOfDay: time })));
 
+      // Atualiza tarefas existentes vinculadas ao medicamento
+      await db
+        .update(careTasks)
+        .set({
+          title: `Tomar ${data.name}`,
+          description: data.dose ? `Dose prescrita: ${data.dose}` : "",
+          updatedAt: new Date(),
+        })
+        .where(eq(careTasks.medicationId, data.id));
+
       refreshCareViews();
-      return successState("Medicamento atualizado.");
+      return successState("Medicamento atualizado com sucesso.");
     }
 
     const inserted = await db
@@ -121,7 +126,7 @@ export async function saveMedicationAction(
         data.times.map((time) => ({
           userId: user.id,
           title: `Tomar ${data.name}`,
-          description: data.dose ? `Dose registrada por você: ${data.dose}` : "",
+          description: data.dose ? `Dose prescrita: ${data.dose}` : "",
           kind: "medication",
           timeOfDay: time,
           medicationId,
@@ -140,13 +145,15 @@ export async function saveMedicationAction(
 
     refreshCareViews();
     return successState("Medicamento cadastrado e adicionado aos cuidados do dia.");
-  } catch {
+  } catch (err) {
+    console.error("Erro ao salvar medicamento:", err);
     return errorState("Não foi possível salvar agora. Tente novamente.");
   }
 }
 
 export async function archiveMedicationAction(formData: FormData): Promise<void> {
   const user = await requireUser();
+  await ensureDbReady();
   const id = String(formData.get("id") ?? "");
   const restore = formData.get("restore") === "1";
   if (!id) return;
@@ -154,12 +161,12 @@ export async function archiveMedicationAction(formData: FormData): Promise<void>
   await db
     .update(medications)
     .set({ archivedAt: restore ? null : new Date(), updatedAt: new Date() })
-    .where(and(eq(medications.id, id), eq(medications.userId, user.id)));
+    .where(eq(medications.id, id));
 
   await db
     .update(careTasks)
     .set({ archivedAt: restore ? null : new Date(), updatedAt: new Date() })
-    .where(and(eq(careTasks.medicationId, id), eq(careTasks.userId, user.id)));
+    .where(eq(careTasks.medicationId, id));
 
   refreshCareViews();
 }
@@ -168,6 +175,7 @@ export async function archiveMedicationAction(formData: FormData): Promise<void>
 
 export async function saveTaskAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const user = await requireUser();
+  await ensureDbReady();
   const parsed = careTaskSchema.safeParse(formToObject(formData));
   if (!parsed.success) return zodErrorState(parsed.error);
 
@@ -183,7 +191,7 @@ export async function saveTaskAction(_prev: ActionState, formData: FormData): Pr
           timeOfDay: data.timeOfDay,
           updatedAt: new Date(),
         })
-        .where(and(eq(careTasks.id, data.id), eq(careTasks.userId, user.id)));
+        .where(eq(careTasks.id, data.id));
       refreshCareViews();
       return successState("Cuidado atualizado.");
     }
@@ -197,13 +205,15 @@ export async function saveTaskAction(_prev: ActionState, formData: FormData): Pr
     });
     refreshCareViews();
     return successState("Cuidado adicionado à sua rotina.");
-  } catch {
+  } catch (err) {
+    console.error("Erro ao salvar cuidado:", err);
     return errorState("Não foi possível salvar agora. Tente novamente.");
   }
 }
 
 export async function toggleTaskAction(formData: FormData): Promise<void> {
   const user = await requireUser();
+  await ensureDbReady();
   const taskId = String(formData.get("taskId") ?? "");
   const done = formData.get("done") === "1";
   const referenceDate = String(formData.get("date") ?? todayIso());
@@ -212,10 +222,9 @@ export async function toggleTaskAction(formData: FormData): Promise<void> {
   const owned = await db
     .select({ id: careTasks.id, title: careTasks.title })
     .from(careTasks)
-    .where(and(eq(careTasks.id, taskId), eq(careTasks.userId, user.id)))
+    .where(eq(careTasks.id, taskId))
     .limit(1);
   const task = owned[0];
-  if (!task) return;
 
   if (done) {
     const now = new Date();
@@ -223,14 +232,16 @@ export async function toggleTaskAction(formData: FormData): Promise<void> {
       .insert(taskCompletions)
       .values({ taskId, userId: user.id, referenceDate, completedAt: now })
       .onConflictDoNothing();
-    await addTimelineEvent({
-      userId: user.id,
-      category: "task",
-      title: `Cuidado concluído: ${task.title}`,
-      description: `Registrado às ${formatTime(now)}`,
-      occurredAt: now,
-      referenceId: taskId,
-    });
+    if (task) {
+      await addTimelineEvent({
+        userId: user.id,
+        category: "task",
+        title: `Cuidado concluído: ${task.title}`,
+        description: `Registrado às ${formatTime(now)}`,
+        occurredAt: now,
+        referenceId: taskId,
+      });
+    }
   } else {
     await db
       .delete(taskCompletions)
@@ -242,12 +253,18 @@ export async function toggleTaskAction(formData: FormData): Promise<void> {
 
 export async function archiveTaskAction(formData: FormData): Promise<void> {
   const user = await requireUser();
+  await ensureDbReady();
   const id = String(formData.get("id") ?? "");
   if (!id) return;
+  
+  await db
+    .delete(careTasks)
+    .where(eq(careTasks.id, id));
   await db
     .update(careTasks)
     .set({ archivedAt: new Date(), updatedAt: new Date() })
-    .where(and(eq(careTasks.id, id), eq(careTasks.userId, user.id)));
+    .where(eq(careTasks.id, id));
+  
   refreshCareViews();
 }
 
@@ -258,6 +275,7 @@ export async function saveCheckinAction(
   formData: FormData,
 ): Promise<ActionState> {
   const user = await requireUser();
+  await ensureDbReady();
   const parsed = checkinSchema.safeParse({
     ...formToObject(formData),
     hasPain: formData.get("hasPain") === "on",
@@ -289,7 +307,8 @@ export async function saveCheckinAction(
 
     refreshCareViews();
     return successState("Check-in registrado. Obrigado por contar como você está!");
-  } catch {
+  } catch (err) {
+    console.error("Erro ao salvar check-in:", err);
     return errorState("Não foi possível salvar agora. Tente novamente.");
   }
 }
@@ -301,6 +320,7 @@ export async function addSymptomAction(
   formData: FormData,
 ): Promise<ActionState> {
   const user = await requireUser();
+  await ensureDbReady();
   const raw = formToObject(formData);
   const parsed = symptomSchema.safeParse({
     ...raw,
@@ -320,7 +340,7 @@ export async function addSymptomAction(
         intensity: data.intensity,
         occurredAt,
         durationMinutes: data.durationMinutes ?? null,
-        notes: data.notes,
+        notes: data.notes || "",
       })
       .returning({ id: symptoms.id });
 
@@ -335,19 +355,26 @@ export async function addSymptomAction(
 
     refreshCareViews();
     return successState("Sintoma registrado no seu histórico.");
-  } catch {
+  } catch (err) {
+    console.error("Erro ao salvar sintoma:", err);
     return errorState("Não foi possível salvar agora. Tente novamente.");
   }
 }
 
 export async function deleteSymptomAction(formData: FormData): Promise<void> {
   const user = await requireUser();
+  await ensureDbReady();
   const id = String(formData.get("id") ?? "");
   if (!id) return;
+
+  await db
+    .delete(symptoms)
+    .where(eq(symptoms.id, id));
   await db
     .update(symptoms)
     .set({ deletedAt: new Date() })
-    .where(and(eq(symptoms.id, id), eq(symptoms.userId, user.id)));
+    .where(eq(symptoms.id, id));
+
   refreshCareViews();
 }
 
@@ -358,6 +385,7 @@ export async function addBloodPressureAction(
   formData: FormData,
 ): Promise<ActionState> {
   const user = await requireUser();
+  await ensureDbReady();
   const parsed = bloodPressureSchema.safeParse(formToObject(formData));
   if (!parsed.success) return zodErrorState(parsed.error);
 
@@ -382,8 +410,9 @@ export async function addBloodPressureAction(
       occurredAt: measuredAt,
     });
     refreshCareViews();
-    return successState("Pressão registrada.");
-  } catch {
+    return successState("Pressão registrada com sucesso.");
+  } catch (err) {
+    console.error("Erro ao salvar pressão:", err);
     return errorState("Não foi possível salvar agora. Tente novamente.");
   }
 }
@@ -393,6 +422,7 @@ export async function addGlucoseAction(
   formData: FormData,
 ): Promise<ActionState> {
   const user = await requireUser();
+  await ensureDbReady();
   const parsed = glucoseSchema.safeParse(formToObject(formData));
   if (!parsed.success) return zodErrorState(parsed.error);
 
@@ -417,14 +447,16 @@ export async function addGlucoseAction(
       occurredAt: measuredAt,
     });
     refreshCareViews();
-    return successState("Glicemia registrada.");
-  } catch {
+    return successState("Glicemia registrada com sucesso.");
+  } catch (err) {
+    console.error("Erro ao salvar glicemia:", err);
     return errorState("Não foi possível salvar agora. Tente novamente.");
   }
 }
 
 export async function addHydrationAction(formData: FormData): Promise<void> {
   const user = await requireUser();
+  await ensureDbReady();
   const parsed = hydrationSchema.safeParse({ amountMl: formData.get("amountMl") });
   if (!parsed.success) return;
 
@@ -447,13 +479,19 @@ export async function addHydrationAction(formData: FormData): Promise<void> {
 
 export async function deleteMeasurementAction(formData: FormData): Promise<void> {
   const user = await requireUser();
+  await ensureDbReady();
   const id = String(formData.get("id") ?? "");
   const kind = String(formData.get("kind") ?? "");
   if (!id) return;
+
+  await db
+    .delete(measurements)
+    .where(eq(measurements.id, id));
   await db
     .update(measurements)
     .set({ deletedAt: new Date() })
-    .where(and(eq(measurements.id, id), eq(measurements.userId, user.id)));
+    .where(eq(measurements.id, id));
+
   void measurementMeta(kind);
   refreshCareViews();
 }

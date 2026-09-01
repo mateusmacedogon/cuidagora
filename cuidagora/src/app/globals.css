@@ -46,38 +46,102 @@ html[data-elder="true"] {
   font-size: 20px;
 }
 
-/* Alto contraste estrito para máxima legibilidade */
+/* Alto contraste estrito para máxima legibilidade (WCAG AAA) */
 html[data-contrast="true"] {
   --color-canvas: #ffffff;
   --color-surface: #ffffff;
-  --color-surface-muted: #f4f4f5;
-  --color-line: #18181b;
-  --color-line-subtle: #09090b;
+  --color-surface-muted: #ffffff;
+  --color-line: #000000;
+  --color-line-subtle: #000000;
   --color-ink: #000000;
-  --color-ink-soft: #18181b;
-  --color-ink-subtle: #27272a;
+  --color-ink-soft: #000000;
+  --color-ink-subtle: #000000;
 
-  --color-brand: #005f56;
-  --color-brand-strong: #003f39;
-  --color-brand-dark: #002925;
+  --color-brand: #000000;
+  --color-brand-strong: #000000;
+  --color-brand-dark: #000000;
   --color-brand-soft: #ffffff;
   --color-brand-border: #000000;
 
-  --color-accent: #312e81;
+  --color-accent: #000000;
   --color-accent-soft: #ffffff;
 
-  --color-good: #064e3b;
+  --color-good: #000000;
   --color-good-soft: #ffffff;
-  --color-warn: #78350f;
+  --color-warn: #000000;
   --color-warn-soft: #ffffff;
-  --color-alert: #7f1d1d;
+  --color-alert: #000000;
   --color-alert-soft: #ffffff;
 }
 
+html[data-contrast="true"] body {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+html[data-contrast="true"] p,
+html[data-contrast="true"] span,
+html[data-contrast="true"] li,
+html[data-contrast="true"] label,
+html[data-contrast="true"] h1,
+html[data-contrast="true"] h2,
+html[data-contrast="true"] h3,
+html[data-contrast="true"] h4,
+html[data-contrast="true"] h5,
+html[data-contrast="true"] h6,
+html[data-contrast="true"] strong,
+html[data-contrast="true"] div,
+html[data-contrast="true"] td,
+html[data-contrast="true"] th,
+html[data-contrast="true"] a:not(.bg-teal-600):not(.bg-teal-700) {
+  color: #000000 !important;
+}
+
 html[data-contrast="true"] .card,
-html[data-contrast="true"] .field-control {
-  border-width: 2px;
-  border-color: #000000;
+html[data-contrast="true"] .field-control,
+html[data-contrast="true"] li,
+html[data-contrast="true"] fieldset,
+html[data-contrast="true"] section,
+html[data-contrast="true"] header,
+html[data-contrast="true"] footer {
+  border-width: 2px !important;
+  border-color: #000000 !important;
+}
+
+html[data-contrast="true"] button,
+html[data-contrast="true"] input,
+html[data-contrast="true"] select,
+html[data-contrast="true"] textarea,
+html[data-contrast="true"] a.inline-flex {
+  border-width: 2px !important;
+  border-color: #000000 !important;
+}
+
+html[data-contrast="true"] button.bg-teal-600,
+html[data-contrast="true"] button.bg-teal-700,
+html[data-contrast="true"] a.bg-teal-600,
+html[data-contrast="true"] a.bg-teal-700,
+html[data-contrast="true"] button[type="submit"]:not(.bg-white) {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
+}
+
+html[data-contrast="true"] .bg-slate-50,
+html[data-contrast="true"] .bg-slate-100,
+html[data-contrast="true"] .bg-teal-50,
+html[data-contrast="true"] .bg-blue-50,
+html[data-contrast="true"] .bg-indigo-50,
+html[data-contrast="true"] .bg-purple-50,
+html[data-contrast="true"] .bg-emerald-50 {
+  background-color: #ffffff !important;
+  border-color: #000000 !important;
+  border-width: 2px !important;
+}
+
+html[data-contrast="true"] :focus-visible {
+  outline: 3px solid #000000 !important;
+  outline-offset: 3px !important;
 }
 
 /* Modo simplificado: foco nas ações essenciais e alvos maiores */

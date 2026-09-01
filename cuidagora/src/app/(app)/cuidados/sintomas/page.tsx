@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { AlertCircle, Clock, FileText, Plus, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { AlertCircle, ArrowLeft, Clock, FileText, Plus, Trash2 } from "lucide-react";
 
 import { Card, CardTitle, PageHeader } from "@/components/ui/Card";
 import { Badge, EmptyState, SafetyNotice } from "@/components/ui/Feedback";
@@ -21,6 +22,16 @@ export default async function SymptomsPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <div>
+        <Link
+          href="/cuidados"
+          className="inline-flex items-center gap-2 text-sm font-bold text-teal-700 hover:text-teal-900 transition-colors"
+        >
+          <ArrowLeft className="size-4" />
+          Voltar para Plano de Cuidados
+        </Link>
+      </div>
+
       <PageHeader
         icon={<FileText className="size-7 text-teal-700" />}
         title="Registro de Sintomas e Queixas"

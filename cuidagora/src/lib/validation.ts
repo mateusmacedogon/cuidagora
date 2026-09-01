@@ -84,7 +84,14 @@ export const symptomSchema = z.object({
   intensity: z.coerce.number().int().min(1).max(3),
   date: isoDate,
   time: timeOfDay,
-  durationMinutes: z.coerce.number().int().min(0).max(10080).optional(),
+  durationMinutes: z
+    .union([z.coerce.number().int().min(0).max(10080), z.literal(""), z.null()])
+    .optional()
+    .transform((val) =>
+      val === "" || val === null || val === undefined || Number.isNaN(Number(val))
+        ? undefined
+        : Number(val),
+    ),
   notes: trimmed(500).default(""),
 });
 

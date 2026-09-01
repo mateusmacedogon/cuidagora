@@ -12,7 +12,7 @@
 
 > **CuidAgora** é uma aplicação web completa, segura e profundamente inclusiva desenvolvida para organizar rotinas de saúde e bem-estar. Projetada com foco prioritário em idosos, pessoas com condições crônicas de saúde e seus familiares/cuidadores, a plataforma simplifica o acompanhamento de medicamentos, sinais vitais, sintomas, consultas e orientações médicas.
 
----
+## aa
 
 ## 📑 Sumário
 
@@ -48,24 +48,29 @@ A adesão a tratamentos contínuos e o acompanhamento de sinais vitais costumam 
 ## ✨ Principais Funcionalidades
 
 ### 💊 1. Gestão de Medicamentos & Rotina Diária
+
 - Cadastro detalhado de medicamentos (nome, dosagem livre, horários e observações).
 - Geração automática de tarefas diárias vinculadas aos horários cadastrados.
 - Checklist interativo de cuidados do dia com confirmação de conclusão em tempo real.
 
 ### 🩺 2. Medições & Sinais Vitais
+
 - **Pressão Arterial**: Registro de valores sistólicos e diastólicos com conferência de faixas plausíveis.
 - **Glicemia**: Acompanhamento com contexto do teste (em jejum, pós-refeição, antes de dormir, etc.).
 - **Hidratação**: Controle de consumo diário de água com barra de progresso em relação à meta estabelecida.
 
 ### 📝 3. Check-in Diário & Sintomas
+
 - **Check-in Rápido**: Registro em menos de 1 minuto sobre o estado geral de humor e presença de dor.
 - **Anotação de Sintomas**: Escala simplificada de intensidade (1 = Leve, 2 = Moderado, 3 = Forte), data, hora, duração e notas livres com suporte a ditado por voz.
 
 ### 📅 4. Consultas Médicas & Caderno de Perguntas
+
 - Agendamento de consultas com especialidade, profissional e local.
 - **Caderno de Perguntas**: Espaço para o paciente listar previamente dúvidas para não esquecer durante o atendimento médico.
 
 ### 📄 5. Resumo Estruturado para a Consulta
+
 - Filtros rápidos por período (últimos 7, 15, 30 dias ou intervalo personalizado).
 - Compilação automática de:
   - Taxa de adesão aos cuidados e medicamentos.
@@ -75,6 +80,7 @@ A adesão a tratamentos contínuos e o acompanhamento de sinais vitais costumam 
 - **Layout para Impressão**: Estilizado com `@media print` para ser impresso em papel ou salvo em PDF.
 
 ### 🕒 6. Linha do Tempo Unificada
+
 - Histórico cronológico de todos os eventos registrados no sistema (tarefas concluídas, medições, sintomas e anotações).
 
 ---
@@ -83,27 +89,29 @@ A adesão a tratamentos contínuos e o acompanhamento de sinais vitais costumam 
 
 O CuidAgora foi planejado desde o primeiro rascunho com conformidade **WCAG 2.1 nível AA**, integrando recursos diretamente no menu de acessibilidade e salvando as preferências no perfil do usuário:
 
-| Recurso | Como Funciona | Impacto |
-| :--- | :--- | :--- |
-| **🔎 Modo Idoso** | Ativa a flag `data-elder="true"`, aumentando a tipografia base de `17px` para `21px` e expandindo proporcionalmente todos os espaçamentos e alvos de toque (`rem`). | Facilita a leitura para pessoas com presbiopia ou baixa visão. |
-| **🌗 Alto Contraste** | Ativa a flag `data-contrast="true"`, redefinindo a paleta de cores para contraste máximo (`#000000` em `#ffffff` e bordas grossas de 2px). | Atende usuários com catarata, daltonismo ou dificuldades de diferenciação cromática. |
-| **🧩 Modo Simplificado** | Ativa a flag `data-simple="true"`, ocultando elementos secundários e expandindo a altura mínima de botões e links para `3.5rem` (56px). | Reduz a carga cognitiva e evita toques acidentais em telas sensíveis ao toque. |
-| **🔊 Leitura em Voz Alta** | Utiliza a **Web Speech API (SpeechSynthesis)** no componente `<SpeakButton />` para vocalizar resumos do dia, mensagens e orientações. | Proporciona autonomia para pessoas não alfabetizadas ou com deficiência visual severa. |
-| **🎙️ Entrada por Voz** | Componente `<VoiceTextArea />` que utiliza a **Web Speech API (SpeechRecognition)** para transcrição direta de relatos e sintomas. | Elimina a barreira de digitação em teclados virtuais pequenos. |
-| **⌨️ Foco & Teclado** | Foco visível de 3px com contorno contrastante em todos os elementos interativos (`:focus-visible`) e *Skip Link* para navegação rápida. | Totalmente operável via teclado e leitores de tela externos (NVDA, TalkBack, VoiceOver). |
+| Recurso                    | Como Funciona                                                                                                                                                       | Impacto                                                                                  |
+| :------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------- |
+| **🔎 Modo Idoso**          | Ativa a flag `data-elder="true"`, aumentando a tipografia base de `17px` para `21px` e expandindo proporcionalmente todos os espaçamentos e alvos de toque (`rem`). | Facilita a leitura para pessoas com presbiopia ou baixa visão.                           |
+| **🌗 Alto Contraste**      | Ativa a flag `data-contrast="true"`, redefinindo a paleta de cores para contraste máximo (`#000000` em `#ffffff` e bordas grossas de 2px).                          | Atende usuários com catarata, daltonismo ou dificuldades de diferenciação cromática.     |
+| **🧩 Modo Simplificado**   | Ativa a flag `data-simple="true"`, ocultando elementos secundários e expandindo a altura mínima de botões e links para `3.5rem` (56px).                             | Reduz a carga cognitiva e evita toques acidentais em telas sensíveis ao toque.           |
+| **🔊 Leitura em Voz Alta** | Utiliza a **Web Speech API (SpeechSynthesis)** no componente `<SpeakButton />` para vocalizar resumos do dia, mensagens e orientações.                              | Proporciona autonomia para pessoas não alfabetizadas ou com deficiência visual severa.   |
+| **🎙️ Entrada por Voz**     | Componente `<VoiceTextArea />` que utiliza a **Web Speech API (SpeechRecognition)** para transcrição direta de relatos e sintomas.                                  | Elimina a barreira de digitação em teclados virtuais pequenos.                           |
+| **⌨️ Foco & Teclado**      | Foco visível de 3px com contorno contrastante em todos os elementos interativos (`:focus-visible`) e _Skip Link_ para navegação rápida.                             | Totalmente operável via teclado e leitores de tela externos (NVDA, TalkBack, VoiceOver). |
 
 ---
 
 ## 🚦 Semáforo do Cuidado & Segurança Clínica
 
 O **Semáforo do Cuidado** é uma ferramenta visual que classifica o estado geral do paciente em três níveis:
+
 - 🟢 **Verde**: Tudo dentro da rotina combinada.
 - 🟡 **Amarelo (Atenção)**: Algum registro disparou uma orientação médica preventiva cadastrada.
 - 🔴 **Vermelho (Urgência)**: Registro atingiu critério urgente cadastrado (ex.: buscar pronto atendimento).
 
 ### 🛡️ Princípios Fundamentais de Segurança
+
 1. **Zero Inteligência Médica Não Autorizada**: O sistema **não diagnostica** nem toma decisões clínicas por conta própria.
-2. **Baseado Apenas em Regras Cadastradas**: O semáforo só é acionado caso o paciente ou seu médico tenham cadastrado previamente orientações e limites específicos (ex.: *"Se pressão sistólica >= 180, procurar emergência — Dra. Fictícia"*).
+2. **Baseado Apenas em Regras Cadastradas**: O semáforo só é acionado caso o paciente ou seu médico tenham cadastrado previamente orientações e limites específicos (ex.: _"Se pressão sistólica >= 180, procurar emergência — Dra. Fictícia"_).
 3. **Comunicação Multimodal**: O status **nunca é comunicado exclusivamente por cor** — são exibidos ícones, nomes literais por extenso, títulos e a transcrição exata da orientação prescrita.
 
 ---
@@ -260,6 +268,7 @@ erDiagram
 ```
 
 ### Entidades Principais:
+
 1. `users`: Cadastro de usuário (`account_type`: `person` ou `caregiver`).
 2. `user_preferences`: Configurações de acessibilidade (`simplifiedMode`, `elderMode`, `highContrast`, `readAloud`, `hydrationGoalMl`).
 3. `sessions`: Sessões ativas indexadas por hash SHA-256.
@@ -287,41 +296,49 @@ erDiagram
 ## 🚀 Como Instalar e Executar
 
 ### Pré-requisitos
+
 - **Node.js**: Versão 20.x ou superior.
 - **PostgreSQL**: Instância em execução localmente ou na nuvem (ex.: Neon, Supabase, Docker).
 
 ### Passo a Passo
 
 1. **Clone o repositório**:
+
    ```bash
    git clone <URL_DO_REPOSITORIO>
    cd cuidagora/cuidagora
    ```
 
 2. **Instale as dependências**:
+
    ```bash
    npm install
    ```
 
 3. **Configure as variáveis de ambiente**:
    Crie um arquivo `.env` na raiz do projeto `cuidagora/` com a sua string de conexão:
+
    ```env
    DATABASE_URL="postgresql://postgres:postgres@localhost:5432/cuidagora_db"
    NODE_ENV="development"
    ```
 
 4. **Execute as migrações do banco de dados**:
+
    ```bash
    npm run db:migrate
    ```
 
 5. **Popule o banco com dados de demonstração (Opcional, mas recomendado)**:
+
    ```bash
    npm run db:seed
    ```
-   *(Ou execute `npm run db:setup` para rodar a migração e o seed juntos).*
+
+   _(Ou execute `npm run db:setup` para rodar a migração e o seed juntos)._
 
 6. **Inicie o servidor de desenvolvimento**:
+
    ```bash
    npm run dev
    ```
@@ -334,10 +351,10 @@ erDiagram
 
 Ao rodar o script `npm run db:seed`, duas contas pré-configuradas com dados clínicos fictícios são criadas:
 
-| Perfil | E-mail | Senha Padrão | Descrição |
-| :--- | :--- | :--- | :--- |
-| **Titular (Paciente)** | `maria@exemplo.com` | `cuidagora123` | Conta com histórico completo de 30 dias: medicamentos, tarefas, medições de pressão/glicemia, hidratação, check-ins e orientações do semáforo cadastradas. |
-| **Cuidador Autorizado** | `joao@exemplo.com` | `cuidagora123` | Conta de cuidador vinculada à Maria Aparecida com permissões granulares ativas para visualização. |
+| Perfil                  | E-mail              | Senha Padrão   | Descrição                                                                                                                                                  |
+| :---------------------- | :------------------ | :------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Titular (Paciente)**  | `maria@exemplo.com` | `cuidagora123` | Conta com histórico completo de 30 dias: medicamentos, tarefas, medições de pressão/glicemia, hidratação, check-ins e orientações do semáforo cadastradas. |
+| **Cuidador Autorizado** | `joao@exemplo.com`  | `cuidagora123` | Conta de cuidador vinculada à Maria Aparecida com permissões granulares ativas para visualização.                                                          |
 
 ---
 
@@ -353,6 +370,7 @@ npx vitest run
 ```
 
 ### O que é testado:
+
 - `care-status.test.ts`: Avaliação do Semáforo do Cuidado (regras de atenção/urgência, limites, ausência de regras e acessibilidade multimodal).
 - `security.test.ts`: Hashing de senhas, validação de tokens e resolução do princípio de menor privilégio de permissões.
 - `validation.test.ts`: Schemas Zod de cadastro, medicamentos, check-in, pressão arterial, intensidade de sintomas e períodos do resumo médico.
@@ -361,18 +379,18 @@ npx vitest run
 
 ## 📜 Scripts Disponíveis
 
-| Comando | Descrição |
-| :--- | :--- |
-| `npm run dev` | Inicia o servidor de desenvolvimento Next.js na porta 3000. |
-| `npm run build` | Gera o bundle otimizado para produção. |
-| `npm run start` | Inicia o servidor Next.js em modo de produção. |
-| `npm run typecheck` | Executa a verificação estática de tipos com o compilador TypeScript. |
-| `npm run lint` | Executa o linter ESLint no projeto. |
-| `npm run test` | Roda os testes unitários e de integração com Vitest. |
-| `npm run db:migrate` | Executa a criação de tabelas e índices no PostgreSQL. |
-| `npm run db:seed` | Insere usuários e dados fictícios de exemplo no banco. |
-| `npm run db:setup` | Executa a migração e o seed sequencialmente. |
-| `npm run db:push` | Sincroniza o schema Drizzle diretamente com o banco de dados. |
+| Comando              | Descrição                                                            |
+| :------------------- | :------------------------------------------------------------------- |
+| `npm run dev`        | Inicia o servidor de desenvolvimento Next.js na porta 3000.          |
+| `npm run build`      | Gera o bundle otimizado para produção.                               |
+| `npm run start`      | Inicia o servidor Next.js em modo de produção.                       |
+| `npm run typecheck`  | Executa a verificação estática de tipos com o compilador TypeScript. |
+| `npm run lint`       | Executa o linter ESLint no projeto.                                  |
+| `npm run test`       | Roda os testes unitários e de integração com Vitest.                 |
+| `npm run db:migrate` | Executa a criação de tabelas e índices no PostgreSQL.                |
+| `npm run db:seed`    | Insere usuários e dados fictícios de exemplo no banco.               |
+| `npm run db:setup`   | Executa a migração e o seed sequencialmente.                         |
+| `npm run db:push`    | Sincroniza o schema Drizzle diretamente com o banco de dados.        |
 
 ---
 

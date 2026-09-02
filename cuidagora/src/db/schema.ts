@@ -100,6 +100,7 @@ export const caregiverAccess = pgTable(
   (table) => [
     index("caregiver_owner_idx").on(table.ownerId),
     index("caregiver_email_idx").on(table.caregiverEmail),
+    index("caregiver_id_idx").on(table.caregiverId),
   ],
 );
 
@@ -154,7 +155,10 @@ export const careTasks = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index("care_tasks_user_idx").on(table.userId)],
+  (table) => [
+    index("care_tasks_user_idx").on(table.userId),
+    index("care_tasks_user_active_idx").on(table.userId, table.archivedAt, table.timeOfDay),
+  ],
 );
 
 export const taskCompletions = pgTable(

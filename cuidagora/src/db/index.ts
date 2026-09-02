@@ -90,15 +90,21 @@ async function ensurePostgresReady(poolInstance: Pool): Promise<void> {
   return globalForDb.__cuidagoraPgInitPromise;
 }
 
+let isDbInitialized = false;
+
 export async function ensureDbReady() {
+  if (isDbInitialized) return;
+
   if (isConfiguredPostgres) {
     const { pool: poolInstance } = initDb();
     if (poolInstance && typeof poolInstance.query === "function") {
       await ensurePostgresReady(poolInstance);
+      isDbInitialized = true;
       return;
     }
   }
   await ensurePGliteReady();
+  isDbInitialized = true;
 }
 
 export function isRemoteDatabase(): boolean {

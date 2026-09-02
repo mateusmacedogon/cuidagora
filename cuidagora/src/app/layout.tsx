@@ -1,6 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { Inter } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-sans",
+});
 
 const APP_NAME = "CuidAgora";
 const APP_DEFAULT_TITLE = "CuidAgora — Gestão Humanizada e Acessível de Cuidados de Saúde";
@@ -58,7 +65,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body className="min-h-dvh bg-[var(--color-canvas)] text-[var(--color-ink)]">{children}</body>
+      <body className={`${inter.variable} min-h-dvh font-sans bg-[var(--color-canvas)] text-[var(--color-ink)]`}>
+        {children}
+      </body>
     </html>
   );
 }

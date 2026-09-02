@@ -6,28 +6,53 @@
 export const APP_TIME_ZONE = "America/Sao_Paulo";
 const UTC_OFFSET = "-03:00";
 
+// Formatadores memoizados em nível de módulo para alto desempenho e zero overhead de GC
+const isoDateFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: APP_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: APP_TIME_ZONE,
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
+const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: APP_TIME_ZONE,
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+});
+
+const longDateFormatter = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: APP_TIME_ZONE,
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+});
+
+const hourFormatter = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: APP_TIME_ZONE,
+  hour: "2-digit",
+  hour12: false,
+});
+
 export function nowUtc(): Date {
   return new Date();
 }
 
 /** "YYYY-MM-DD" do dia atual no fuso do app. */
 export function todayIso(reference: Date = new Date()): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: APP_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(reference);
+  return isoDateFormatter.format(reference);
 }
 
 /** "HH:MM" do horário atual no fuso do app. */
 export function currentTime(reference: Date = new Date()): string {
-  return new Intl.DateTimeFormat("pt-BR", {
-    timeZone: APP_TIME_ZONE,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(reference);
+  return timeFormatter.format(reference);
 }
 
 /** Converte data local ("YYYY-MM-DD") + hora local ("HH:MM") no instante UTC correspondente. */
@@ -63,12 +88,7 @@ export function formatDate(value: Date | string): string {
   } else {
     date = new Date();
   }
-  return new Intl.DateTimeFormat("pt-BR", {
-    timeZone: APP_TIME_ZONE,
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
+  return dateFormatter.format(date);
 }
 
 export function formatLongDate(value: Date | string): string {
@@ -84,21 +104,11 @@ export function formatLongDate(value: Date | string): string {
   } else {
     date = new Date();
   }
-  return new Intl.DateTimeFormat("pt-BR", {
-    timeZone: APP_TIME_ZONE,
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(date);
+  return longDateFormatter.format(date);
 }
 
 export function formatTime(value: Date): string {
-  return new Intl.DateTimeFormat("pt-BR", {
-    timeZone: APP_TIME_ZONE,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(value);
+  return timeFormatter.format(value);
 }
 
 export function formatDateTime(value: Date): string {
@@ -107,13 +117,7 @@ export function formatDateTime(value: Date): string {
 
 /** Saudação de acordo com o horário local. */
 export function greeting(reference: Date = new Date()): string {
-  const hour = Number(
-    new Intl.DateTimeFormat("pt-BR", {
-      timeZone: APP_TIME_ZONE,
-      hour: "2-digit",
-      hour12: false,
-    }).format(reference),
-  );
+  const hour = Number(hourFormatter.format(reference));
   if (hour < 12) return "Bom dia";
   if (hour < 18) return "Boa tarde";
   return "Boa noite";

@@ -44,7 +44,6 @@ function refreshCareViews() {
   revalidatePath("/cuidados/check-in");
   revalidatePath("/historico");
   revalidatePath("/resumo");
-  revalidatePath("/", "layout");
 }
 
 /* ------------------------------ Medicamentos ------------------------------- */
@@ -252,32 +251,34 @@ export async function toggleTaskAction(formData: FormData): Promise<void> {
   }
   await saveSyncState(sync);
 
-  // 2. Persiste no banco de dados com validação de ownership
-  const owned = await db
-    .select({ id: careTasks.id, title: careTasks.title })
-    .from(careTasks)
-    .where(and(eq(careTasks.id, taskId), eq(careTasks.userId, user.id)))
-    .limit(1)
-    .catch(() => []);
-  const task = owned[0];
+  if (done) {
+    // 2. Persiste no banco de dados com validação de ownership
+    const owned = await db
+      .select({ id: careTasks.id, title: careTasks.title })
+      .from(careTasks)
+      .where(and(eq(careTasks.id, taskId), eq(careTasks.userId, user.id)))
+      .limit(1)
+      .catch(() => []);
+    const task = owned[0];
 
-  if (done && task) {
-    const now = new Date();
-    await db
-      .insert(taskCompletions)
-      .values({ taskId, userId: user.id, referenceDate, completedAt: now })
-      .onConflictDoNothing()
-      .catch(() => {});
+    if (task) {
+      const now = new Date();
+      await db
+        .insert(taskCompletions)
+        .values({ taskId, userId: user.id, referenceDate, completedAt: now })
+        .onConflictDoNothing()
+        .catch(() => {});
 
-    await addTimelineEvent({
-      userId: user.id,
-      category: "task",
-      title: `Cuidado concluído: ${task.title}`,
-      description: `Registrado às ${formatTime(now)}`,
-      occurredAt: now,
-      referenceId: taskId,
-    }).catch(() => {});
-  } else if (!done) {
+      await addTimelineEvent({
+        userId: user.id,
+        category: "task",
+        title: `Cuidado concluído: ${task.title}`,
+        description: `Registrado às ${formatTime(now)}`,
+        occurredAt: now,
+        referenceId: taskId,
+      }).catch(() => {});
+    }
+  } else {
     await db
       .delete(taskCompletions)
       .where(

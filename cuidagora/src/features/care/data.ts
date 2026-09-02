@@ -382,12 +382,16 @@ export async function buildCareMetrics(
   userId: string,
   dateIso: string,
   hydrationGoalMl: number,
+  preloaded?: {
+    tasks?: TodayTask[];
+    hydration?: number;
+  },
 ): Promise<CareMetrics> {
   const [tasks, bloodPressure, glucose, hydration, todaySymptoms, badDays] = await Promise.all([
-    listTasksForDate(userId, dateIso),
+    preloaded?.tasks ? Promise.resolve(preloaded.tasks) : listTasksForDate(userId, dateIso),
     getLatestMeasurement(userId, "blood_pressure", dateIso),
     getLatestMeasurement(userId, "glucose", dateIso),
-    getHydrationTotal(userId, dateIso),
+    typeof preloaded?.hydration === "number" ? Promise.resolve(preloaded.hydration) : getHydrationTotal(userId, dateIso),
     listSymptoms(userId, dateIso, dateIso),
     countConsecutiveBadMoodDays(userId, dateIso),
   ]);

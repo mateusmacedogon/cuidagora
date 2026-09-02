@@ -8,7 +8,7 @@ import { deleteAppointmentAction } from "@/features/appointments/actions";
 import { AppointmentForm } from "@/features/appointments/components/forms";
 import { listAppointments, listQuestions } from "@/features/care/data";
 import { requireUser } from "@/lib/auth/session";
-import { formatDateTime } from "@/lib/date";
+import { formatDateTime, nowUtc } from "@/lib/date";
 
 export const metadata: Metadata = { title: "Agenda de Consultas — CuidAgora" };
 

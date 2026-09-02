@@ -47,16 +47,20 @@ export default async function DashboardPage() {
   const dateIso = todayIso();
   const simplified = user.preferences.simplifiedMode;
 
-  const [tasks, hydration, nextAppointment, guidelines, metrics, checkin, caregivers] =
+  const [tasks, hydration, nextAppointment, guidelines, checkin, caregivers] =
     await Promise.all([
       listTasksForDate(user.id, dateIso),
       getHydrationTotal(user.id, dateIso),
       getNextAppointment(user.id),
       listGuidelines(user.id, true),
-      buildCareMetrics(user.id, dateIso, user.preferences.hydrationGoalMl),
       getCheckin(user.id, dateIso),
       listMyCaregivers(user.id),
     ]);
+
+  const metrics = await buildCareMetrics(user.id, dateIso, user.preferences.hydrationGoalMl, {
+    tasks,
+    hydration,
+  });
 
   const primaryCaregiver = caregivers[0];
   const status = evaluateCareStatus(guidelines, metrics);

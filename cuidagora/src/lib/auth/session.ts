@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createHash, createHmac, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -144,8 +145,8 @@ const DEFAULT_PREFERENCES: SessionUser["preferences"] = {
   hydrationGoalMl: 2000,
 };
 
-/** Lê e valida a sessão do cookie de forma resiliente a multi-instâncias serverless da Vercel. */
-export async function getSessionUser(): Promise<SessionUser | null> {
+/** Lê e valida a sessão do cookie de forma resiliente a multi-instâncias serverless da Vercel. Memoizado por requisição HTTP via cache(). */
+export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   try {
     const store = await cookies();
     const token = store.get(SESSION_COOKIE)?.value;
@@ -249,7 +250,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     console.error("Erro ao obter usuário da sessão:", error);
     return null;
   }
-}
+});
 
 export async function requireUser(): Promise<SessionUser> {
   const user = await getSessionUser();

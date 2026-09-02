@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS caregiver_access (
 );
 CREATE INDEX IF NOT EXISTS caregiver_owner_idx ON caregiver_access (owner_id);
 CREATE INDEX IF NOT EXISTS caregiver_email_idx ON caregiver_access (caregiver_email);
+CREATE INDEX IF NOT EXISTS caregiver_id_idx ON caregiver_access (caregiver_id);
 
 CREATE TABLE IF NOT EXISTS medications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -90,6 +91,7 @@ CREATE TABLE IF NOT EXISTS care_tasks (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS care_tasks_user_idx ON care_tasks (user_id);
+CREATE INDEX IF NOT EXISTS care_tasks_user_active_idx ON care_tasks (user_id, archived_at, time_of_day);
 
 CREATE TABLE IF NOT EXISTS task_completions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

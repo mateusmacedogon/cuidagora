@@ -1,36 +1,37 @@
 # CuidAgora — Gestão Humanizada e Acessível de Cuidados de Saúde
 
 [![Vercel](https://img.shields.io/badge/Vercel-Deployed-black?style=flat&logo=vercel)](https://vercel.com/)
-[![Next.js](https://img.shields.io/badge/Next.js-16.2.6-black?style=flat&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.2.6_(Turbopack)-black?style=flat&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2.6-blue?style=flat&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.1.17-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-8.20.0-336791?style=flat&logo=postgresql)](https://www.postgresql.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16_/_PGlite_Dual--Engine-336791?style=flat&logo=postgresql)](https://www.postgresql.org/)
 [![Drizzle ORM](https://img.shields.io/badge/Drizzle_ORM-0.45.2-C5F74F?style=flat&logo=drizzle)](https://orm.drizzle.team/)
-[![Vitest](https://img.shields.io/badge/Vitest-4.1.11-6E9F18?style=flat&logo=vitest)](https://vitest.dev/)
-[![Acessibilidade WCAG](https://img.shields.io/badge/Acessibilidade-WCAG_2.1_AA-success?style=flat)](#acessibilidade-universal--inclusao-a11y)
-[![LGPD Compliance](https://img.shields.io/badge/LGPD-Compliant-success?style=flat)](#privacidade-seguranca--lgpd)
+[![Vitest](https://img.shields.io/badge/Vitest-41_testes_passando-6E9F18?style=flat&logo=vitest)](https://vitest.dev/)
+[![Acessibilidade WCAG](https://img.shields.io/badge/Acessibilidade-WCAG_2.1_AA-success?style=flat)](#acessibilidade-universal-e-inclusão-a11y)
+[![LGPD Compliance](https://img.shields.io/badge/LGPD-Compliant-success?style=flat)](#privacidade-segurança-e-lgpd)
 
-> **CuidAgora** é uma aplicação web completa, segura e profundamente inclusiva desenvolvida para organizar rotinas de saúde e bem-estar. Projetada com foco prioritário em idosos, pessoas com condições crônicas de saúde e seus familiares/cuidadores, a plataforma simplifica o acompanhamento de medicamentos, sinais vitais, sintomas, consultas e orientações médicas.
+> **CuidAgora** é uma aplicação web completa, resiliente, segura e profundamente inclusiva desenvolvida para organizar rotinas de saúde e bem-estar. Projetada com foco prioritário em idosos, pessoas com condições crônicas e seus familiares/cuidadores, a plataforma simplifica a gestão diária de medicamentos, sinais vitais, sintomas, consultas, hidratação e orientações médicas combinadas.
 
 ---
 
 ## Sumário
 
 - [Deploy no Vercel](#deploy-no-vercel)
-- [Visão Geral e Proposta de Valor](#visao-geral--proposta-de-valor)
+- [Visão Geral e Proposta de Valor](#visão-geral-e-proposta-de-valor)
 - [Principais Funcionalidades](#principais-funcionalidades)
-- [Acessibilidade Universal e Inclusão (a11y)](#acessibilidade-universal--inclusao-a11y)
-- [Semáforo do Cuidado e Segurança Clínica](#semaforo-do-cuidado--seguranca-clinica)
-- [Modo Cuidador e Menor Privilégio](#modo-cuidador--menor-privilegio)
+- [Acessibilidade Universal e Inclusão (a11y)](#acessibilidade-universal-e-inclusão-a11y)
+- [Semáforo do Cuidado e Segurança Clínica](#semáforo-do-cuidado-e-segurança-clínica)
+- [Modo Cuidador e Menor Privilégio](#modo-cuidador-e-menor-privilégio)
+- [Arquitetura de Alta Performance e Resiliência](#arquitetura-de-alta-performance-e-resiliência)
 - [Tecnologias Utilizadas](#tecnologias-utilizadas)
-- [Arquitetura e Estrutura de Pastas](#arquitetura--estrutura-de-pastas)
+- [Arquitetura e Estrutura de Pastas](#arquitetura-e-estrutura-de-pastas)
 - [Modelo de Dados (PostgreSQL + Drizzle ORM)](#modelo-de-dados-postgresql--drizzle-orm)
-- [Privacidade, Segurança e LGPD](#privacidade-seguranca--lgpd)
+- [Privacidade, Segurança e LGPD](#privacidade-segurança-e-lgpd)
 - [Como Instalar e Executar](#como-instalar-e-executar)
-- [Contas de Demonstração (Seed)](#contas-de-demonstracao-seed)
+- [Contas de Demonstração (Seed)](#contas-de-demonstração-seed)
 - [Testes Automatizados](#testes-automatizados)
-- [Scripts Disponíveis](#scripts-disponiveis)
+- [Scripts Disponíveis](#scripts-disponíveis)
 - [Aviso de Responsabilidade](#aviso-de-responsabilidade)
 
 ---
@@ -40,107 +41,128 @@
 O projeto está pronto para publicação instantânea na **Vercel**:
 1. Conecte o repositório na **Vercel** (`mateusmacedogon/cuidagora`).
 2. Clique em **Deploy**.
-3. O build roda de forma automatizada com fallback em memória pré-populado ou conectado ao **Vercel Postgres** / **Neon**.
-4. Consulte o guia detalhado em [DEPLOY_VERCEL.md](DEPLOY_VERCEL.md).
+3. O build roda de forma 100% automatizada com Turbopack. Graças à arquitetura **Dual-Engine**, se nenhuma `DATABASE_URL` for informada, o sistema inicializa automaticamente com banco em memória PGlite pré-populado, funcionando imediatamente sem necessidade de configuração prévia de infraestrutura externa!
+4. Para conectar ao PostgreSQL em produção (Vercel Postgres, Neon, Supabase, etc.), basta definir a variável de ambiente `DATABASE_URL`.
+5. Consulte o guia detalhado em [DEPLOY_VERCEL.md](DEPLOY_VERCEL.md).
 
 ---
 
 ## Visão Geral e Proposta de Valor
 
-A adesão a tratamentos contínuos e o acompanhamento de sinais vitais costumam ser tarefas difíceis e fragmentadas. O **CuidAgora** foi criado para preencher essa lacuna, proporcionando:
+Acompanhar rotinas de saúde, gerenciar múltiplos horários de medicamentos e memorizar sinais vitais para consultas são desafios complexos que frequentemente resultam em descontinuidade de tratamentos ou estresse familiar. O **CuidAgora** resolve essa dor através de:
 
-1. **Simplicidade Radical**: Interfaces limpas, textos em linguagem natural, botões grandes e navegação intuitiva.
-2. **Acessibilidade Nativa**: Modos visuais para idosos e baixa visão, leitura de tela em voz alta e comandos/ditado por voz.
-3. **Resumos Prontos para Consultas**: Elimina cadernos de anotações manuais, gerando relatórios completos e otimizados para impressão.
-4. **Cuidado Colaborativo sem Invasão de Privacidade**: Compartilhamento granular com cuidadores sem perda da autonomia do paciente.
-5. **Segurança Ética**: Ausência de diagnósticos automatizados ou substituição de orientação profissional.
+1. **Simplicidade e Clareza**: Telas limpas, botões grandes com alvos de toque generosos, vocabulário acolhedor em português e ausência de jargões técnicos.
+2. **Latência Zero Percebida (Optimistic UI)**: Interações diárias (como marcar remédios tomados ou registrar copos de água) respondem em **0ms** com reconciliação assíncrona segura no servidor.
+3. **Acessibilidade Nativa (WCAG 2.1 AA)**: Modos dedicados para idosos, alto contraste cromático, modo simplificado cognitivo, leitura de tela em voz alta (TTS) e ditado por voz.
+4. **Relatórios Prontos para Consultas**: Elimina cadernos de papel e anotações soltas, gerando sínteses claras com dados objetivos e versão otimizada para impressão ou salvamento em PDF.
+5. **Cuidado Compartilhado sem Invasão**: Familiares e cuidadores autorizados acompanham a rotina em modo somente-leitura com permissões modulares decididas pelo titular.
+6. **Segurança Ética**: O sistema nunca gera diagnósticos automáticos nem substitui médicos — seu semáforo é estritamente baseado em orientações cadastradas pelo próprio usuário ou profissional de confiança.
 
 ---
 
 ## Principais Funcionalidades
 
-### 1. Gestão de Medicamentos e Rotina Diária
+### 1. Gestão de Medicamentos com Reconciliação Segura
+- Cadastro de medicamentos (nome, dosagem livre, horários diários, frequência e observações).
+- Geração automática de tarefas no checklist diário.
+- **Reconciliação Não-Destrutiva**: Alterações de horários ou dosagens atualizam e arquivam registros sem disparar deleções em cascata, preservando 100% do histórico de adesão anterior.
 
-- Cadastro detalhado de medicamentos (nome, dosagem livre, horários e observações).
-- Geração automática de tarefas diárias vinculadas aos horários cadastrados.
-- Checklist interativo de cuidados do dia com confirmação de conclusão em tempo real.
+### 2. Checklist Diário com Resposta Instantânea (Optimistic UI)
+- Visualização cronológica dos cuidados do dia organizados por horário.
+- Marcação de conclusão/desmarcação com resposta visual em 0ms (`useOptimistic` + `useTransition`), com rollback automático em caso de falha de conexão.
+- Barra de progresso de adesão aos cuidados calculada dinamicamente.
 
-### 2. Medições e Sinais Vitais
+### 3. Sinais Vitais com Gráficos Sparkline Interativos
+- **Pressão Arterial**: Registro de valores sistólicos/diastólicos com cálculo de médias do período, linha de referência saudável (120/80 mmHg) e curva visual de evolução temporal.
+- **Glicemia Capilar**: Registro com contexto clínico (em jejum, pós-prandial, pré-refeição, etc.), média do período e curva de tendência com faixa de referência visual (70 a 140 mg/dL).
+- **Hidratação**: Controle de consumo com meta diária personalizável (em ml) e atalhos rápidos de adição (+200ml, +300ml, +500ml).
 
-- **Pressão Arterial**: Registro de valores sistólicos e diastólicos com conferência de faixas plausíveis.
-- **Glicemia**: Acompanhamento com contexto do teste (em jejum, pós-refeição, antes de dormir, etc.).
-- **Hidratação**: Controle de consumo diário de água com barra de progresso em relação à meta estabelecida.
+### 4. Hub de Registro Rápido (`<QuickLogHub />`)
+- Painel unificado com abas rápidas na tela inicial para registro expresso de água, aferição de pressão arterial, teste de glicemia ou relato de sintomas sem trocar de página.
 
-### 3. Check-in Diário e Sintomas
+### 5. Cartão de Emergência & Apoio Rápido (`<EmergencyCard />`)
+- Botão de ligação expressa para o **SAMU 192** com animação de alerta.
+- Acesso imediato a números de utilidade pública: **Bombeiros (193)** e **Disque Saúde SUS (136)**.
+- Exibição do contato do cuidador principal vinculado para aviso imediato.
 
-- **Check-in Rápido**: Registro em menos de 1 minuto sobre o estado geral de humor e presença de dor.
-- **Anotação de Sintomas**: Escala simplificada de intensidade (1 = Leve, 2 = Moderado, 3 = Forte), data, hora, duração e notas livres com suporte a ditado por voz.
+### 6. Check-in Diário e Sintomas
+- **Check-in de Humor e Bem-Estar**: Registro do humor do dia e indicador de dor com anotações em menos de 1 minuto.
+- **Registro de Sintomas**: Escala simplificada de intensidade (1 = Leve, 2 = Moderado, 3 = Forte), data, hora, duração aproximada e suporte a relato por voz.
 
-### 4. Consultas Médicas e Caderno de Perguntas
+### 7. Consultas Médicas e Caderno de Perguntas
+- Agendamento de consultas com especialidade, médico e local.
+- **Caderno de Perguntas**: Lista de dúvidas preparadas antecipadamente para levar à consulta, marcando quais já foram esclarecidas. Perguntas vinculadas a consultas canceladas são desvinculadas automaticamente sem perda do texto.
 
-- Agendamento de consultas com especialidade, profissional e local.
-- **Caderno de Perguntas**: Espaço para o paciente listar previamente dúvidas para não esquecer durante o atendimento médico.
+### 8. Resumo Estruturado para o Médico
+- Filtro por períodos (últimos 7, 15, 30 dias ou intervalo personalizado).
+- Compilação automática de taxa de adesão a remédios, médias vitais, sintomas, check-ins e dúvidas pendentes.
+- Estilização completa para impressão em papel ou exportação para PDF (`@media print`).
 
-### 5. Resumo Estruturado para a Consulta
-
-- Filtros rápidos por período (últimos 7, 15, 30 dias ou intervalo personalizado).
-- Compilação automática de:
-  - Taxa de adesão aos cuidados e medicamentos.
-  - Médias e variações de pressão arterial e glicemia.
-  - Histórico de sintomas e check-ins no período.
-  - Perguntas não respondidas preparadas para o médico.
-- **Layout para Impressão**: Estilizado com `@media print` para ser impresso em papel ou salvo em PDF.
-
-### 6. Linha do Tempo Unificada
-
-- Histórico cronológico de todos os eventos registrados no sistema (tarefas concluídas, medições, sintomas e anotações).
+### 9. Portabilidade de Dados e LGPD (`/api/exportar-dados`)
+- Exportação completa e estruturada em formato JSON contendo titular, preferências, remédios, tarefas, histórico de adesão (`taskCompletions`), medições, sintomas, check-ins, consultas e autorizações de cuidadores.
+- Nome de arquivo sanitizado em ASCII puro para download seguro em qualquer dispositivo.
 
 ---
 
 ## Acessibilidade Universal e Inclusão (a11y)
 
-O CuidAgora foi planejado desde o primeiro rascunho com conformidade **WCAG 2.1 nível AA**, integrando recursos diretamente no menu de acessibilidade e salvando as preferências no perfil do usuário:
+O CuidAgora foi planejado desde a base em conformidade com as diretrizes **WCAG 2.1 nível AA**:
 
 | Recurso | Como Funciona | Impacto |
 | :--- | :--- | :--- |
-| **Modo Idoso** | Ativa a flag `data-elder="true"`, aumentando a tipografia base de `17px` para `21px` e expandindo proporcionalmente todos os espaçamentos e alvos de toque (`rem`). | Facilita a leitura para pessoas com presbiopia ou baixa visão. |
-| **Alto Contraste** | Ativa a flag `data-contrast="true"`, redefinindo a paleta de cores para contraste máximo (`#000000` em `#ffffff` e bordas grossas de 2px). | Atende usuários com catarata, daltonismo ou dificuldades de diferenciação cromática. |
-| **Modo Simplificado** | Ativa a flag `data-simple="true"`, ocultando elementos secundários e expandindo a altura mínima de botões e links para `3.5rem` (56px). | Reduz a carga cognitiva e evita toques acidentais em telas sensíveis ao toque. |
-| **Leitura em Voz Alta** | Utiliza a **Web Speech API (SpeechSynthesis)** no componente `<SpeakButton />` para vocalizar resumos do dia, mensagens e orientações. | Proporciona autonomia para pessoas não alfabetizadas ou com deficiência visual severa. |
-| **Entrada por Voz** | Componente `<VoiceTextArea />` que utiliza a **Web Speech API (SpeechRecognition)** para transcrição direta de relatos e sintomas. | Elimina a barreira de digitação em teclados virtuais pequenos. |
-| **Foco e Teclado** | Foco visível de 3px com contorno contrastante em todos os elementos interativos (`:focus-visible`) e _Skip Link_ para navegação rápida. | Totalmente operável via teclado e leitores de tela externos (NVDA, TalkBack, VoiceOver). |
+| **Modo Idoso** | Ativa a flag `data-elder="true"`, elevando a fonte base para `21px` e expandindo proporcionalmente espaçamentos, campos e botões. | Facilita a leitura para pessoas com presbiopia, vista cansada ou baixa visão. |
+| **Alto Contraste** | Ativa a flag `data-contrast="true"`, aplicando paleta de contraste máximo (`#000000` em `#ffffff` e bordas grossas de 2px). | Atende pessoas com catarata, daltonismo ou perda de sensibilidade ao contraste. |
+| **Modo Simplificado** | Ativa a flag `data-simple="true"`, ocultando elementos decorativos e garantindo botões com altura mínima de `3.5rem` (56px). | Reduz a sobrecarga cognitiva e previne toques acidentais na tela. |
+| **Leitura em Voz Alta (TTS)** | Componente `<SpeakButton />` baseado na **Web Speech API** (`SpeechSynthesis`) que vocaliza resumos, orientações e tarefas. | Concede autonomia a pessoas não alfabetizadas ou com deficiência visual severa. |
+| **Ditado por Voz (STT)** | Componente `<VoiceTextArea />` com a **Web Speech API** (`SpeechRecognition`), permitindo ditar observações com pré-visualização e confirmação antes de salvar. | Elimina a barreira de digitação em teclados virtuais reduzidos de celulares. |
+| **Navegação por Teclado** | Contorno de foco visível de 3px (`:focus-visible`), _Skip Link_ para o conteúdo principal e vínculos `aria-describedby` para anúncios em leitores de tela (NVDA, TalkBack, VoiceOver). | Operabilidade total sem mouse ou toque. |
 
 ---
 
 ## Semáforo do Cuidado e Segurança Clínica
 
-O **Semáforo do Cuidado** é uma ferramenta visual que classifica o estado geral do paciente em três níveis:
+O **Semáforo do Cuidado** é uma ferramenta de triagem preventiva baseada em três estados:
 
-- **Verde**: Tudo dentro da rotina combinada.
-- **Amarelo (Atenção)**: Algum registro disparou uma orientação médica preventiva cadastrada.
-- **Vermelho (Urgência)**: Registro atingiu critério urgente cadastrado (ex.: buscar pronto atendimento).
+- 🟢 **Verde (Estável)**: Rotina dentro dos parâmetros normais.
+- 🟡 **Amarelo (Atenção)**: Algum registro atingiu um limite preventivo cadastrado.
+- 🔴 **Vermelho (Urgente)**: Registro atingiu um limite de urgência (ex.: recomendação para buscar pronto atendimento).
 
-### Princípios Fundamentais de Segurança
-
-1. **Zero Inteligência Médica Não Autorizada**: O sistema **não diagnostica** nem toma decisões clínicas por conta própria.
-2. **Baseado Apenas em Regras Cadastradas**: O semáforo só é acionado caso o paciente ou seu médico tenham cadastrado previamente orientações e limites específicos (ex.: _"Se pressão sistólica >= 180, procurar emergência — Dra. Fictícia"_).
-3. **Comunicação Multimodal**: O status **nunca é comunicado exclusivamente por cor** — são exibidos ícones, nomes literais por extenso, títulos e a transcrição exata da orientação prescrita.
+### Princípios Éticos e Clínicos
+1. **Zero Diagnóstico Autônomo**: A plataforma **nunca cria hipóteses diagnósticas ou altera tratamentos**.
+2. **Baseado em Regras Combinadas**: O semáforo só opera quando o usuário (ou seu profissional de saúde) cadastra orientações explícitas (ex.: _"Se pressão sistólica >= 160, tomar medicamento SOS e repousar — Dr. Silva"_).
+3. **Apresentação Multimodal**: A informação nunca depende apenas de cor — inclui ícones com semântica distinta, textos por extenso, descrição clara do parâmetro observado e transcrição literal da recomendação do médico.
 
 ---
 
 ## Modo Cuidador e Menor Privilégio
 
-O CuidAgora permite que familiares e profissionais acompanhem um paciente com segurança máxima:
+O titular mantém controle absoluto sobre o compartilhamento de seus dados:
+- **Vínculo por E-mail**: O paciente autoriza o cuidador indicando o e-mail cadastrado.
+- **Permissões Granulares por Módulo**: Escolha individual entre `tasks`, `medications`, `measurements`, `symptoms`, `appointments` e `timeline`.
+- **Acesso Estritamente Somente-Leitura**: Cuidadores não possuem permissão para criar, editar ou excluir registros do paciente.
+- **Isolamento de Estado**: Cookies de sincronização rápida do navegador são isolados por `userId`, garantindo que ações locais do cuidador nunca contaminem a visualização clínica do paciente.
 
-- **Convite e Vínculo por E-mail**: O paciente autoriza o cuidador informando seu e-mail.
-- **Permissões Granulares**: O titular escolhe individualmente quais módulos o cuidador pode visualizar:
-  - `tasks`: Ver cuidados do dia
-  - `medications`: Ver medicamentos
-  - `measurements`: Ver medições (pressão, glicemia, água)
-  - `symptoms`: Ver sintomas
-  - `appointments`: Ver consultas
-  - `timeline`: Ver linha do tempo
-- **Privilégio Exclusivo de Escrita**: Cuidadores têm acesso estritamente de **leitura** aos dados liberados. Apenas o próprio paciente pode alterar ou excluir seus registros.
+---
+
+## Arquitetura de Alta Performance e Resiliência
+
+Para oferecer uma experiência rápida e estável tanto em conexões lentas de celular quanto em servidores serverless, implementamos as seguintes otimizações estruturais:
+
+1. **Dual-Engine de Banco de Dados**:
+   - Conexão nativa com **PostgreSQL** via `pg` quando `DATABASE_URL` estiver configurada.
+   - Fallback automático transparente para **PGlite** (PostgreSQL compilado para WebAssembly) em memória quando executado sem variáveis externas, garantindo que o app rode de primeira em qualquer máquina ou preview.
+2. **Memoização de Sessão por Requisição com React `cache()`**:
+   - As chamadas `requireUser()` e `getSessionUser()` executam a consulta ao banco apenas **uma vez por ciclo HTTP**, reutilizando o usuário em memória entre `layout.tsx`, páginas e componentes de navegação.
+3. **Formatadores `Intl.DateTimeFormat` Estáticos**:
+   - Eliminação de instanciações repetidas de `Intl` dentro de loops de formatação de datas, acelerando renderizações de listas e execução de testes em até 50%.
+4. **Verificação Instantânea de Conexão (`isDbInitialized`)**:
+   - Flag em memória que retorna imediatamente (0ms) após a primeira validação do banco, evitando checagens assíncronas repetidas em todas as queries.
+5. **Índices Compostos Estratégicos**:
+   - Índices em `caregiver_access (caregiver_id)` e `care_tasks (user_id, archived_at, time_of_day)` para buscas imediatas no dashboard.
+6. **Fontes Otimizadas com Zero CLS**:
+   - Fonte Inter carregada via `next/font/google` com subconjunto latino e `display: swap`.
+7. **Compressão Nativa no Next.js**:
+   - `compress: true` e cabeçalhos de `Cache-Control` no `next.config.ts`.
 
 ---
 
@@ -149,30 +171,31 @@ O CuidAgora permite que familiares e profissionais acompanhem um paciente com se
 ```
 ┌───────────────────────────────────────────────────────────┐
 │                        FRONTEND                           │
-│  Next.js 16 (App Router) • React 19 • Tailwind CSS 4      │
-│  TypeScript 5.9 • Web Speech API (TTS & Speech-to-Text)   │
+│  Next.js 16 (App Router + Turbopack) • React 19           │
+│  Tailwind CSS 4 • Web Speech API (TTS & Speech-to-Text)   │
+│  Optimistic UI (useOptimistic + useTransition)            │
 └─────────────────────────────┬─────────────────────────────┘
                               │
 ┌─────────────────────────────▼─────────────────────────────┐
 │                     BACKEND & REGRAS                      │
 │  Server Components & Server Actions • Zod 4 Validation    │
-│  Node.js Crypto (scrypt KDF + SHA-256 Sessions)           │
+│  React cache() • Timing-Safe HMAC Sessions                │
 └─────────────────────────────┬─────────────────────────────┘
                               │
 ┌─────────────────────────────▼─────────────────────────────┐
 │                    BANCO DE DADOS & ORM                   │
-│  PostgreSQL 16 • Drizzle ORM • Drizzle Kit Migrations     │
+│  PostgreSQL 16 / PGlite (Wasm) Dual-Engine • Drizzle ORM  │
 └───────────────────────────────────────────────────────────┘
 ```
 
-- **Framework**: [Next.js 16](https://nextjs.org/) (App Router, Server Components e Server Actions).
-- **Linguagem**: [TypeScript 5.9](https://www.typescriptlang.org/).
-- **Interface & Estilos**: [React 19](https://react.dev/), [Tailwind CSS 4](https://tailwindcss.com/), PostCSS e Tokens CSS dinâmicos.
-- **Banco de Dados**: [PostgreSQL](https://www.postgresql.org/).
-- **ORM & Migrações**: [Drizzle ORM](https://orm.drizzle.team/) e [Drizzle Kit](https://orm.drizzle.team/kit-docs/overview).
+- **Framework**: [Next.js 16.2.6](https://nextjs.org/) (App Router, Turbopack, Server Actions).
+- **Linguagem**: [TypeScript 5.9.3](https://www.typescriptlang.org/).
+- **Interface & Estilos**: [React 19.2.6](https://react.dev/), [Tailwind CSS 4.1.17](https://tailwindcss.com/), Lucide Icons.
+- **Banco de Dados**: [PostgreSQL 16](https://www.postgresql.org/) e [@electric-sql/pglite](https://pglite.dev/) (Wasm).
+- **ORM & Migrações**: [Drizzle ORM 0.45.2](https://orm.drizzle.team/) e [Drizzle Kit](https://orm.drizzle.team/kit-docs/overview).
 - **Validação de Dados**: [Zod 4](https://zod.dev/).
-- **Testes**: [Vitest](https://vitest.dev/).
-- **Segurança Criptográfica**: Módulos nativos `node:crypto` (`scrypt`, `timingSafeEqual`, `randomBytes`, `createHash`).
+- **Testes**: [Vitest 4.1.11](https://vitest.dev/).
+- **Segurança Criptográfica**: Módulo nativo `node:crypto` (`scrypt`, `timingSafeEqual`, `randomBytes`, `createHmac`).
 
 ---
 
@@ -188,14 +211,15 @@ cuidagora/
 │   ├── app/                      # Rotas da aplicação (Next.js App Router)
 │   │   ├── (app)/                # Rotas autenticadas da plataforma
 │   │   │   ├── acompanhando/     # Área do cuidador (pacientes vinculados)
-│   │   │   ├── consultas/        # Gestão de consultas e perguntas ao médico
+│   │   │   │   └── [ownerId]/    # Painel detalhado do paciente acompanhado
+│   │   │   ├── consultas/        # Gestão de consultas e caderno de perguntas
 │   │   │   ├── cuidados/         # Submódulos de cuidados, remédios e sinais
 │   │   │   │   ├── check-in/     # Registro de bem-estar diário
 │   │   │   │   ├── medicamentos/ # Gestão de medicamentos
 │   │   │   │   ├── medicoes/     # Registro de pressão, glicemia e água
 │   │   │   │   └── sintomas/     # Anotação de sintomas
-│   │   │   ├── historico/        # Linha do tempo de acontecimentos
-│   │   │   ├── inicio/           # Dashboard principal com semáforo e tarefas
+│   │   │   ├── historico/        # Linha do tempo unificada de acontecimentos
+│   │   │   ├── inicio/           # Dashboard principal com semáforo, tarefas e hub
 │   │   │   ├── perfil/           # Configurações de conta, cuidadores e LGPD
 │   │   │   │   ├── cuidadores/   # Gestão de permissões de acesso
 │   │   │   │   ├── orientacoes/  # Cadastro de regras do semáforo
@@ -207,48 +231,64 @@ cuidagora/
 │   │   │   ├── criar-conta/      # Cadastro de novos usuários
 │   │   │   ├── entrar/           # Login com seleção de credenciais
 │   │   │   ├── recuperar-senha/  # Solicitação de recuperação
-│   │   │   └── redefinir-senha/  # Redefinição de senha
+│   │   │   └── redefinir-senha/  # Redefinição de senha com revogação de sessões
 │   │   ├── api/
+│   │   │   ├── exportar-dados/   # Portabilidade completa de dados LGPD (JSON)
 │   │   │   └── health/           # Endpoint de healthcheck da aplicação
-│   │   ├── globals.css           # Design system e tokens de acessibilidade
-│   │   ├── layout.tsx            # HTML Root Layout
+│   │   ├── globals.css           # Design system, temas e tokens de acessibilidade
+│   │   ├── layout.tsx            # HTML Root Layout com injeção de fontes
 │   │   └── page.tsx              # Landing page informativa
 │   ├── components/               # Componentes visuais reutilizáveis
 │   │   ├── a11y/                 # Componentes dedicados de acessibilidade
-│   │   │   ├── AccessibilityMenu.tsx # Menu flutuante de configurações visuais
+│   │   │   ├── AccessibilityMenu.tsx # Menu flutuante de preferências visuais
 │   │   │   ├── SpeakButton.tsx   # Botão de sintetizador de voz (TTS)
-│   │   │   └── VoiceTextArea.tsx # Campo de texto com reconhecimento de voz
+│   │   │   └── VoiceTextArea.tsx # Campo de texto com reconhecimento de voz (STT)
+│   │   ├── charts/               # Gráficos SVG interativos (VitalSparklines)
 │   │   ├── layout/               # Componentes estruturais (Nav, Header, Shell)
 │   │   └── ui/                   # Botões, Cards, Badges, Alertas e Campos
 │   ├── db/                       # Camada de banco de dados
-│   │   ├── index.ts              # Conexão Drizzle ORM com pool pg
-│   │   └── schema.ts             # Schemas Drizzle e tipagens TypeScript
+│   │   ├── index.ts              # Conexão Dual-Engine (Postgres + PGlite)
+│   │   ├── schema.ts             # Schemas Drizzle e índices compostos
+│   │   ├── schema-sql.ts         # DDL SQL de fallback nativo
+│   │   └── seed-data.ts          # Dados de demonstração tipados
 │   ├── features/                 # Módulos encapsulados por domínio funcional
 │   │   ├── account/              # Ações de conta e exclusão LGPD
 │   │   ├── appointments/         # Lógica e formulários de consultas
 │   │   ├── auth/                 # Server actions e formulários de autenticação
-│   │   ├── care/                 # Ações, queries e widgets de cuidados diários
-│   │   ├── caregiver/            # Gestão de autorizações e permissões
+│   │   ├── care/                 # Ações, queries, widgets e componentes otimistas
+│   │   │   └── components/
+│   │   │       ├── OptimisticTaskRow.tsx    # Checklist diário em 0ms
+│   │   │       ├── OptimisticHydration.tsx  # Ingestão de água em 0ms
+│   │   │       ├── EmergencyCard.tsx        # SOS rápido e telefones úteis
+│   │   │       └── QuickLogHub.tsx          # Abas rápidas de registro
+│   │   ├── caregiver/            # Gestão de autorizações e menor privilégio
 │   │   ├── guidelines/           # Regras e limites do Semáforo do Cuidado
 │   │   ├── preferences/          # Persistência de opções de acessibilidade
 │   │   ├── summary/              # Geração do relatório médico e filtros de data
 │   │   └── timeline/             # Serviço de registro unificado de eventos
 │   └── lib/                      # Utilitários, regras de negócio e validações
 │       ├── auth/
-│       │   ├── password.ts       # Hash seguro via scrypt e timingSafeEqual
-│       │   └── session.ts        # Gerenciamento de sessões seguras em cookies
+│       │   ├── password.ts       # Hash seguro via scrypt
+│       │   └── session.ts        # Sessões assinadas com timingSafeEqual e cache()
+│       ├── sync/
+│       │   └── client-state.ts   # Sincronização rápida isolada por usuário
 │       ├── action-state.ts       # Padrão tipado de retorno para Server Actions
-│       ├── care-status.ts        # Mecanismo avaliador do Semáforo do Cuidado
-│       ├── date.ts               # Formatações locais e manipulação de datas
+│       ├── care-status.ts        # Avaliador multimodal do Semáforo do Cuidado
+│       ├── date.ts               # Formatadores estáticos memoizados de data e hora
 │       ├── domain.ts             # Constantes de domínio, enums e metadados
 │       ├── permissions.ts        # Resolução e aplicação do menor privilégio
 │       └── validation.ts         # Schemas de validação Zod para todos os forms
-├── tests/                        # Testes automatizados com Vitest
+├── tests/                        # 8 suítes de testes automatizados com Vitest
+│   ├── auth-actions.test.ts      # Testes de autenticação e fluxos de sessão
+│   ├── bug-fixes.test.ts         # Validação das correções críticas da auditoria
 │   ├── care-status.test.ts       # Testes da lógica do Semáforo do Cuidado
+│   ├── db-fallback.test.ts       # Testes do motor Dual-Engine PGlite
+│   ├── full-flow.test.ts         # Teste de fluxo completo de ponta a ponta
+│   ├── improvements.test.ts      # Testes de gráficos sparkline e exportação LGPD
 │   ├── security.test.ts          # Testes de hash, senhas e autorizações
 │   └── validation.test.ts        # Testes de schemas Zod e cálculos de datas
 ├── drizzle.config.ts             # Configuração do Drizzle Kit
-├── next.config.ts                # Configuração do Next.js
+├── next.config.ts                # Configuração do Next.js (compressão e headers)
 ├── package.json                  # Dependências e scripts npm
 ├── tsconfig.json                 # Configuração do compilador TypeScript
 └── vitest.config.ts              # Configuração do executor de testes
@@ -258,7 +298,7 @@ cuidagora/
 
 ## Modelo de Dados (PostgreSQL + Drizzle ORM)
 
-O banco de dados é modelado com integridade referencial estrita e índices compostos por `(user_id, data)` para garantir alta performance e isolamento total entre pacientes:
+O banco de dados é modelado com integridade referencial estrita e índices compostos estratégicos para garantir alta performance e isolamento total entre pacientes:
 
 ```mermaid
 erDiagram
@@ -279,113 +319,86 @@ erDiagram
     users ||--o{ timeline_events : "histórico"
 ```
 
-### Entidades Principais:
-
-1. `users`: Cadastro de usuário (`account_type`: `person` ou `caregiver`).
-2. `user_preferences`: Configurações de acessibilidade (`simplifiedMode`, `elderMode`, `highContrast`, `readAloud`, `hydrationGoalMl`).
-3. `sessions`: Sessões ativas indexadas por hash SHA-256.
-4. `caregiver_access`: Vínculo de acompanhamento com objeto `permissions` em JSONB.
-5. `medications` & `medication_schedules`: Medicamentos e seus respectivos horários diários.
-6. `care_tasks` & `task_completions`: Cuidados previstos e histórico diário de realização.
-7. `daily_checkins`: Humor do dia, reporte de dor e anotações.
-8. `measurements`: Pressão arterial (sistólica/diastólica), glicemia com contexto e ingestão de água.
-9. `symptoms`: Sintomas ocorridos com intensidade (1 a 3) e duração.
-10. `appointments` & `appointment_questions`: Consultas médicas e dúvidas para o atendimento.
-11. `care_guidelines`: Regras que alimentam o Semáforo do Cuidado (`metric`, `comparator`, `threshold`, `instruction`).
-12. `timeline_events`: Eventos cronológicos agregados.
-
 ---
 
 ## Privacidade, Segurança e LGPD
 
-- **Hashing de Senhas**: Utiliza `scrypt` com salt criptográfico aleatório de 16 bytes e 64 bytes de derivação (resistente a ataques de força bruta por GPU) e verificação com `timingSafeEqual` contra timing attacks.
-- **Sessões Opaque**: Cookies `httpOnly`, `sameSite: "lax"`, com token criptograficamente aleatório e armazenamento no banco em formato SHA-256 (o token puro nunca toca o banco).
-- **Validação Estrita**: Todas as entradas do usuário passam por validação com Zod antes de qualquer execução de banco.
-- **Exclusão de Conta e Direito ao Esquecimento (LGPD)**: O usuário pode solicitar a eliminação total de sua conta em `Perfil -> Privacidade`. A exclusão exige confirmação explícita digitando a palavra `EXCLUIR` e a senha atual, acionando a remoção imediata em cascata (`ON DELETE CASCADE`) de todos os registros clínicos.
+- **Hashing Criptográfico de Senhas**: Utiliza derivação de chaves `scrypt` com salt aleatório de 16 bytes e 64 bytes de saída (alta resistência a ataques por força bruta).
+- **Prevenção contra Timing Attacks**: Verificação de senhas e tokens de sessão via `crypto.timingSafeEqual` com conferência prévia de comprimento de buffers.
+- **Sessões Protegidas e Stateless**: Cookies `httpOnly`, `sameSite: "lax"`, criptograficamente assinados com HMAC-SHA256 e revogação automática na alteração de senhas.
+- **Isolamento de Estado**: Cookies de sync de interface vinculados estritamente ao `userId`, impedindo contaminação de dados quando um cuidador visualiza o prontuário de um paciente.
+- **Validação de Entrada Estrita**: Todos os formulários e rotas passam por validação tipada Zod antes de atingir a camada de dados.
+- **Direito à Eliminação e Esquecimento (LGPD Art. 18)**: O usuário pode solicitar a eliminação completa e irreversível da sua conta em `Perfil -> Privacidade`. A confirmação exige a senha e a digitação da palavra `EXCLUIR`, acionando a remoção imediata em cascata (`ON DELETE CASCADE`) de todos os seus dados clínicos.
 
 ---
 
 ## Como Instalar e Executar
 
 ### Pré-requisitos
-
 - **Node.js**: Versão 20.x ou superior.
-- **PostgreSQL**: Instância em execução localmente ou na nuvem (ex.: Neon, Supabase, Docker).
+- **PostgreSQL** (Opcional): Instância local ou em nuvem. Se não fornecido, o app utiliza o motor PGlite em memória automaticamente!
 
 ### Passo a Passo
 
 1. **Clone o repositório**:
-
    ```bash
-   git clone <URL_DO_REPOSITORIO>
+   git clone https://github.com/mateusmacedogon/cuidagora.git
    cd cuidagora/cuidagora
    ```
 
 2. **Instale as dependências**:
-
    ```bash
    npm install
    ```
 
-3. **Configure as variáveis de ambiente**:
-   Crie um arquivo `.env` na raiz do projeto `cuidagora/` com a sua string de conexão:
-
+3. **Configure as variáveis de ambiente (Opcional)**:
+   Se desejar conectar ao seu banco PostgreSQL, crie um arquivo `.env` na raiz do projeto:
    ```env
    DATABASE_URL="postgresql://postgres:postgres@localhost:5432/cuidagora_db"
    NODE_ENV="development"
    ```
+   *(Caso não crie o `.env`, o sistema executará com o PGlite em memória com dados pré-carregados).*
 
-4. **Execute as migrações do banco de dados**:
-
-   ```bash
-   npm run db:migrate
-   ```
-
-5. **Popule o banco com dados de demonstração (Opcional, mas recomendado)**:
-
-   ```bash
-   npm run db:seed
-   ```
-
-   _(Ou execute `npm run db:setup` para rodar a migração e o seed juntos)._
-
-6. **Inicie o servidor de desenvolvimento**:
-
+4. **Inicie o servidor de desenvolvimento**:
    ```bash
    npm run dev
    ```
 
-7. Abra o navegador em: [http://localhost:3000](http://localhost:3000)
+5. Abra no navegador: [http://localhost:3000](http://localhost:3000)
 
 ---
 
 ## Contas de Demonstração (Seed)
 
-Ao rodar o script `npm run db:seed`, duas contas pré-configuradas com dados clínicos fictícios são criadas:
+O sistema inclui duas contas pré-configuradas com histórico clínico completo para avaliação imediata:
 
 | Perfil | E-mail | Senha Padrão | Descrição |
 | :--- | :--- | :--- | :--- |
-| **Titular (Paciente)** | `maria@exemplo.com` | `cuidagora123` | Conta com histórico completo de 30 dias: medicamentos, tarefas, medições de pressão/glicemia, hidratação, check-ins e orientações do semáforo cadastradas. |
-| **Cuidador Autorizado** | `joao@exemplo.com` | `cuidagora123` | Conta de cuidador vinculada à Maria Aparecida com permissões granulares ativas para visualização. |
+| **Titular (Paciente)** | `maria@exemplo.com` | `cuidagora123` | Histórico completo de 30 dias: medicamentos, tarefas, medições de pressão/glicemia, hidratação, check-ins e regras do semáforo cadastradas. |
+| **Cuidador Autorizado** | `joao@exemplo.com` | `cuidagora123` | Cuidador vinculado à Maria Aparecida com permissões granulares ativas para acompanhamento compartilhado. |
+
+*(Você também pode clicar no botão de login rápido com demonstração diretamente na tela de login).*
 
 ---
 
 ## Testes Automatizados
 
-O projeto conta com uma suíte de testes com **Vitest** cobrindo regras de negócio críticas, validações de formulário e segurança:
+O projeto conta com **8 suítes de testes** automatizados com **Vitest** totalizando **41 testes** com 100% de aprovação:
 
 ```bash
 # Executar todos os testes
 npm run test
-# ou via Vitest diretamente:
-npx vitest run
 ```
 
-### O que é testado:
-
-- `care-status.test.ts`: Avaliação do Semáforo do Cuidado (regras de atenção/urgência, limites, ausência de regras e acessibilidade multimodal).
-- `security.test.ts`: Hashing de senhas, validação de tokens e resolução do princípio de menor privilégio de permissões.
-- `validation.test.ts`: Schemas Zod de cadastro, medicamentos, check-in, pressão arterial, intensidade de sintomas e períodos do resumo médico.
+### Cobertura das Suítes:
+- `bug-fixes.test.ts`: Validação de hidratação padrão 0, isolamento do sync cookie por usuário, filtragem de perguntas órfãs e sanitização de nomes LGPD.
+- `auth-actions.test.ts`: Cadastro, login, credenciais inválidas e criação de sessão.
+- `db-fallback.test.ts`: Inicialização e resiliência do motor Dual-Engine (PGlite).
+- `full-flow.test.ts`: Fluxo completo de usuário, recuperação de dados e avaliação do Semáforo.
+- `improvements.test.ts`: Consulta de séries temporais para sparklines e estrutura de exportação LGPD.
+- `care-status.test.ts`: Avaliação do Semáforo do Cuidado (atenção/urgência, limites e multimodalidade).
+- `security.test.ts`: Hashing de senhas, validação de tokens e princípio do menor privilégio.
+- `validation.test.ts`: Schemas Zod de cadastro, medicamentos, check-in, pressão arterial e filtros de datas.
 
 ---
 
@@ -394,21 +407,21 @@ npx vitest run
 | Comando | Descrição |
 | :--- | :--- |
 | `npm run dev` | Inicia o servidor de desenvolvimento Next.js na porta 3000. |
-| `npm run build` | Gera o bundle otimizado para produção. |
-| `npm run start` | Inicia o servidor Next.js em modo de produção. |
-| `npm run typecheck` | Executa a verificação estática de tipos com o compilador TypeScript. |
-| `npm run lint` | Executa o linter ESLint no projeto. |
-| `npm run test` | Roda os testes unitários e de integração com Vitest. |
-| `npm run db:migrate` | Executa a criação de tabelas e índices no PostgreSQL. |
-| `npm run db:seed` | Insere usuários e dados fictícios de exemplo no banco. |
-| `npm run db:setup` | Executa a migração e o seed sequencialmente. |
-| `npm run db:push` | Sincroniza o schema Drizzle diretamente com o banco de dados. |
+| `npm run build` | Gera o build de produção otimizado com Turbopack. |
+| `npm run start` | Inicia o servidor em modo de produção. |
+| `npm run typecheck` | Executa a checagem estática de tipos com o compilador TypeScript. |
+| `npm run lint` | Executa o linter ESLint em todo o código. |
+| `npm run test` | Roda os 41 testes automatizados com Vitest. |
+| `npm run db:migrate` | Executa migrações DDL no banco PostgreSQL. |
+| `npm run db:seed` | Popula o banco com os dados de demonstração. |
+| `npm run db:setup` | Executa migração e seed sequencialmente. |
+| `npm run db:push` | Sincroniza o schema Drizzle diretamente com o banco. |
 
 ---
 
 ## Aviso de Responsabilidade
 
-> **Aviso Importante**: O **CuidAgora** é uma ferramenta de organização pessoal de cuidados e suporte à rotina. O aplicativo **não realiza diagnósticos, não recomenda medicamentos ou dosagens e não substitui a avaliação, acompanhamento e orientação de médicos ou profissionais de saúde qualificados**. Em situações de emergência, procure imediatamente o serviço de atendimento médico da sua região (como o SAMU 192 no Brasil).
+> **Aviso Importante**: O **CuidAgora** é uma plataforma de suporte à organização pessoal e acompanhamento compartilhado da rotina de saúde. O aplicativo **não realiza diagnósticos, não recomenda medicamentos ou dosagens e não substitui a avaliação, o acompanhamento e as orientações de médicos ou profissionais de saúde qualificados**. Em situações de emergência clínica ou mal-estar súbito, procure imediatamente o serviço médico da sua região (como o SAMU 192 no Brasil).
 
 ---
 

@@ -45,6 +45,7 @@ export function EmergencyCard({
             onClick={() => setOpen((prev) => !prev)}
             className="inline-flex items-center justify-center size-10 rounded-xl border border-rose-300 bg-white text-rose-800 hover:bg-rose-100 transition-colors cursor-pointer"
             aria-expanded={open}
+            aria-label={open ? "Ocultar contatos de emergência" : "Ver contatos de apoio e emergência"}
             title={open ? "Ocultar contatos" : "Ver contatos de apoio"}
           >
             {open ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}

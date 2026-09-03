@@ -88,6 +88,12 @@ export async function deleteAppointmentAction(formData: FormData): Promise<void>
     .update(appointments)
     .set({ deletedAt: new Date(), updatedAt: new Date() })
     .where(and(eq(appointments.id, id), eq(appointments.userId, user.id)));
+
+  await db
+    .update(appointmentQuestions)
+    .set({ appointmentId: null })
+    .where(and(eq(appointmentQuestions.appointmentId, id), eq(appointmentQuestions.userId, user.id)));
+
   refresh(id);
 }
 

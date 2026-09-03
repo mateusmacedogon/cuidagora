@@ -5,6 +5,7 @@ export const SYNC_COOKIE = "cuidagora_sync_v1";
 
 export type ClientSyncState = {
   date: string;
+  userId?: string;
   completions: Record<string, string>; // taskId -> completedAt ISO string
   uncompleted: string[]; // taskIds explicitly uncompleted today
   hydrationTotal: number;
@@ -13,7 +14,7 @@ export type ClientSyncState = {
   deletedSymptomIds: string[];
 };
 
-export async function getSyncState(): Promise<ClientSyncState> {
+export async function getSyncState(expectedUserId?: string): Promise<ClientSyncState> {
   const today = todayIso();
   try {
     const store = await cookies();
@@ -22,11 +23,25 @@ export async function getSyncState(): Promise<ClientSyncState> {
     if (raw) {
       const parsed = JSON.parse(Buffer.from(raw, "base64url").toString("utf-8")) as ClientSyncState;
       if (parsed && parsed.date === today) {
+        if (expectedUserId && parsed.userId && parsed.userId !== expectedUserId) {
+          return {
+            date: today,
+            userId: expectedUserId,
+            completions: {},
+            uncompleted: [],
+            hydrationTotal: 0,
+            deletedTaskIds: [],
+            deletedMeasurementIds: [],
+            deletedSymptomIds: [],
+          };
+        }
+
         return {
           date: today,
+          userId: parsed.userId || expectedUserId,
           completions: parsed.completions || {},
           uncompleted: parsed.uncompleted || [],
-          hydrationTotal: typeof parsed.hydrationTotal === "number" ? parsed.hydrationTotal : 850,
+          hydrationTotal: typeof parsed.hydrationTotal === "number" ? parsed.hydrationTotal : 0,
           deletedTaskIds: parsed.deletedTaskIds || [],
           deletedMeasurementIds: parsed.deletedMeasurementIds || [],
           deletedSymptomIds: parsed.deletedSymptomIds || [],
@@ -39,9 +54,10 @@ export async function getSyncState(): Promise<ClientSyncState> {
 
   return {
     date: today,
+    userId: expectedUserId,
     completions: {},
     uncompleted: [],
-    hydrationTotal: 850,
+    hydrationTotal: 0,
     deletedTaskIds: [],
     deletedMeasurementIds: [],
     deletedSymptomIds: [],
@@ -65,5 +81,14 @@ export async function saveSyncState(state: ClientSyncState): Promise<void> {
     });
   } catch (err) {
     console.warn("Aviso ao salvar sync state em cookie:", err);
+  }
+}
+
+export async function clearSyncState(): Promise<void> {
+  try {
+    const store = await cookies();
+    store.delete(SYNC_COOKIE);
+  } catch (err) {
+    console.warn("Aviso ao limpar sync state em cookie:", err);
   }
 }

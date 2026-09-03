@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { createHash, createHmac, randomBytes } from "node:crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { and, eq, isNull } from "drizzle-orm";
@@ -38,7 +38,9 @@ function verifyPayload(token: string): SessionPayload | null {
     if (parts.length !== 2) return null;
     const [data, signature] = parts;
     const expected = createHmac("sha256", SESSION_SECRET).update(data).digest("base64url");
-    if (signature !== expected) return null;
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expected);
+    if (sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) return null;
 
     const payload = JSON.parse(Buffer.from(data, "base64url").toString("utf-8")) as SessionPayload;
     if (!payload.uid || !payload.exp || payload.exp < Date.now()) return null;
@@ -76,10 +78,20 @@ export async function createSession(
     }
   }
 
+  let defaultEmail = "";
+  let defaultName = "Usuário";
+  if (userId === JOAO_DEMO_ID) {
+    defaultEmail = "joao@exemplo.com";
+    defaultName = "João Fictício (cuidador)";
+  } else if (userId === MARIA_DEMO_ID) {
+    defaultEmail = "maria@exemplo.com";
+    defaultName = "Maria Aparecida (demonstração)";
+  }
+
   const payload: SessionPayload = {
     uid: userId,
-    email: email || (userId === JOAO_DEMO_ID ? "joao@exemplo.com" : "maria@exemplo.com"),
-    name: name || (userId === JOAO_DEMO_ID ? "João Fictício (cuidador)" : "Maria Aparecida (demonstração)"),
+    email: email || defaultEmail,
+    name: name || defaultName,
     accountType,
     exp: expiresAt.getTime(),
     nonce: randomBytes(8).toString("hex"),

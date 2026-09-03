@@ -90,16 +90,22 @@ export function MedicationForm({ medication }: { medication?: MedicationFormValu
             </div>
           ))}
         </div>
-        <div className="pt-1">
+        <div className="flex items-center gap-3 pt-1">
           <Button
             type="button"
             variant="secondary"
             size="sm"
+            disabled={times.length >= 8}
             icon={<Plus className="size-4" />}
-            onClick={() => setTimes((current) => [...current, "12:00"])}
+            onClick={() => setTimes((current) => (current.length < 8 ? [...current, "12:00"] : current))}
           >
             Adicionar outro horário
           </Button>
+          {times.length >= 8 ? (
+            <span className="text-xs text-amber-700 font-medium">
+              Limite de 8 horários atingido.
+            </span>
+          ) : null}
         </div>
       </Fieldset>
 

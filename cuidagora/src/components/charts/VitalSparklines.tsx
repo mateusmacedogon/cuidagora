@@ -174,7 +174,7 @@ export function BloodPressureChart({
           {items.map((m, i) => {
             const x = getX(i);
             const d = new Date(m.measuredAt);
-            const dateStr = `${d.getDate()}/${d.getMonth() + 1}`;
+            const dateStr = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
             return (
               <text
                 key={`label-${i}`}
@@ -297,7 +297,7 @@ export function GlucoseChart({
           {items.map((m, i) => {
             const x = getX(i);
             const d = new Date(m.measuredAt);
-            const dateStr = `${d.getDate()}/${d.getMonth() + 1}`;
+            const dateStr = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
             return (
               <text
                 key={`label-${i}`}

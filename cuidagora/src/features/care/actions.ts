@@ -93,21 +93,55 @@ export async function saveMedicationAction(
         .insert(medicationSchedules)
         .values(uniqueTimes.map((time) => ({ medicationId: data.id as string, timeOfDay: time })));
 
-      await db
-        .delete(careTasks)
+      // Reconcilia tarefas sem apagar registros anteriores (evita ON DELETE CASCADE em taskCompletions)
+      const existingTasks = await db
+        .select()
+        .from(careTasks)
         .where(and(eq(careTasks.medicationId, data.id), eq(careTasks.userId, user.id)));
 
       if (data.createTasks) {
-        await db.insert(careTasks).values(
-          uniqueTimes.map((time) => ({
-            userId: user.id,
-            title: `Tomar ${data.name}`,
-            description: data.dose ? `Dose prescrita: ${data.dose}` : "",
-            kind: "medication",
-            timeOfDay: time,
-            medicationId: data.id,
-          })),
-        );
+        const existingByTime = new Map(existingTasks.map((t) => [t.timeOfDay, t]));
+
+        for (const time of uniqueTimes) {
+          const existing = existingByTime.get(time);
+          if (existing) {
+            await db
+              .update(careTasks)
+              .set({
+                title: `Tomar ${data.name}`,
+                description: data.dose ? `Dose prescrita: ${data.dose}` : "",
+                archivedAt: null,
+                updatedAt: new Date(),
+              })
+              .where(eq(careTasks.id, existing.id));
+          } else {
+            await db.insert(careTasks).values({
+              userId: user.id,
+              title: `Tomar ${data.name}`,
+              description: data.dose ? `Dose prescrita: ${data.dose}` : "",
+              kind: "medication",
+              timeOfDay: time,
+              medicationId: data.id,
+            });
+          }
+        }
+
+        const removedTasks = existingTasks.filter((t) => !uniqueTimes.includes(t.timeOfDay) && !t.archivedAt);
+        for (const removed of removedTasks) {
+          await db
+            .update(careTasks)
+            .set({ archivedAt: new Date(), updatedAt: new Date() })
+            .where(eq(careTasks.id, removed.id));
+        }
+      } else {
+        for (const task of existingTasks) {
+          if (!task.archivedAt) {
+            await db
+              .update(careTasks)
+              .set({ archivedAt: new Date(), updatedAt: new Date() })
+              .where(eq(careTasks.id, task.id));
+          }
+        }
       }
 
       refreshCareViews();
@@ -239,7 +273,8 @@ export async function toggleTaskAction(formData: FormData): Promise<void> {
   if (!taskId) return;
 
   // 1. Sincroniza estado imediato (funciona através de todos os lambdas serverless)
-  const sync = await getSyncState();
+  const sync = await getSyncState(user.id);
+  sync.userId = user.id;
   if (done) {
     sync.completions[taskId] = new Date().toISOString();
     sync.uncompleted = (sync.uncompleted || []).filter((id) => id !== taskId);
@@ -279,13 +314,14 @@ export async function toggleTaskAction(formData: FormData): Promise<void> {
       }).catch(() => {});
     }
   } else {
+    // 3. Exclusão direta no banco sem leitura prévia
     await db
       .delete(taskCompletions)
       .where(
         and(
           eq(taskCompletions.taskId, taskId),
-          eq(taskCompletions.referenceDate, referenceDate),
           eq(taskCompletions.userId, user.id),
+          eq(taskCompletions.referenceDate, referenceDate),
         ),
       )
       .catch(() => {});
@@ -301,7 +337,8 @@ export async function archiveTaskAction(formData: FormData): Promise<void> {
   if (!id) return;
 
   // 1. Sincroniza estado excluído
-  const sync = await getSyncState();
+  const sync = await getSyncState(user.id);
+  sync.userId = user.id;
   if (!sync.deletedTaskIds.includes(id)) {
     sync.deletedTaskIds.push(id);
     delete sync.completions[id];
@@ -417,7 +454,8 @@ export async function deleteSymptomAction(formData: FormData): Promise<void> {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
 
-  const sync = await getSyncState();
+  const sync = await getSyncState(user.id);
+  sync.userId = user.id;
   if (!sync.deletedSymptomIds.includes(id)) {
     sync.deletedSymptomIds.push(id);
     await saveSyncState(sync);
@@ -517,7 +555,8 @@ export async function addHydrationAction(formData: FormData): Promise<void> {
   const amount = parsed.data.amountMl;
 
   // 1. Sincroniza hidratação acumulada (evita saltos entre instâncias serverless)
-  const sync = await getSyncState();
+  const sync = await getSyncState(user.id);
+  sync.userId = user.id;
   const newTotal = Math.min(10000, (sync.hydrationTotal || 0) + amount);
   sync.hydrationTotal = newTotal;
   await saveSyncState(sync);
@@ -549,7 +588,8 @@ export async function deleteMeasurementAction(formData: FormData): Promise<void>
   const kind = String(formData.get("kind") ?? "");
   if (!id) return;
 
-  const sync = await getSyncState();
+  const sync = await getSyncState(user.id);
+  sync.userId = user.id;
   if (!sync.deletedMeasurementIds.includes(id)) {
     sync.deletedMeasurementIds.push(id);
     await saveSyncState(sync);

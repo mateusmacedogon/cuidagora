@@ -112,7 +112,9 @@ export function VoiceTextArea({
         value={value}
         onChange={(event) => setValue(event.target.value)}
         aria-invalid={error ? true : undefined}
-        aria-describedby={hint ? `${name}-hint` : undefined}
+        aria-describedby={
+          [hint ? `${name}-hint` : null, error ? `${name}-error` : null].filter(Boolean).join(" ") || undefined
+        }
         className="field-control"
       />
       {supported ? (
@@ -174,7 +176,7 @@ export function VoiceTextArea({
         </div>
       ) : null}
       {error ? (
-        <p role="alert" className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-rose-600">
+        <p id={`${name}-error`} role="alert" className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-rose-600">
           <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </p>

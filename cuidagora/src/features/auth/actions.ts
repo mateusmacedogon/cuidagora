@@ -5,8 +5,9 @@ import { redirect } from "next/navigation";
 import { and, eq, gt, isNull } from "drizzle-orm";
 
 import { db, ensureDbReady } from "@/db";
-import { passwordResetTokens, userPreferences, users } from "@/db/schema";
+import { passwordResetTokens, sessions, userPreferences, users } from "@/db/schema";
 import { createSession, destroySession } from "@/lib/auth/session";
+import { clearSyncState } from "@/lib/sync/client-state";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import {
   errorState,
@@ -178,6 +179,7 @@ export async function demoSignInAction(role: "maria" | "joao"): Promise<ActionSt
 export async function signOutAction(): Promise<void> {
   try {
     await destroySession();
+    await clearSyncState();
   } catch (error) {
     console.error("Erro ao encerrar sessão:", error);
   }
@@ -261,6 +263,9 @@ export async function resetPasswordAction(
       .update(passwordResetTokens)
       .set({ usedAt: new Date() })
       .where(eq(passwordResetTokens.id, token.id));
+
+    // Revoga todas as sessões ativas para garantir segurança contra invasão
+    await db.delete(sessions).where(eq(sessions.userId, token.userId));
 
     return successState("Senha alterada com sucesso! Agora você já pode entrar.");
   } catch (error) {

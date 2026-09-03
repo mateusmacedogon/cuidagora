@@ -104,7 +104,7 @@ export async function listTasksForDate(userId: string, dateIso: string): Promise
       .where(and(eq(careTasks.userId, userId), isNull(careTasks.archivedAt)))
       .orderBy(asc(careTasks.timeOfDay))
       .catch(() => []),
-    getSyncState().catch(() => null),
+    getSyncState(userId).catch(() => null),
   ]);
 
   const tasks = rows.map((task) => {
@@ -210,7 +210,7 @@ export async function listSymptoms(userId: string, fromIso: string, toIso: strin
       )
       .orderBy(desc(symptoms.occurredAt))
       .catch(() => []),
-    getSyncState().catch(() => null),
+    getSyncState(userId).catch(() => null),
   ]);
 
   if (sync?.deletedSymptomIds?.length) {
@@ -243,7 +243,7 @@ export async function listMeasurements(
       .where(and(...conditions))
       .orderBy(desc(measurements.measuredAt))
       .catch(() => []),
-    getSyncState().catch(() => null),
+    getSyncState(userId).catch(() => null),
   ]);
 
   if (sync?.deletedMeasurementIds?.length) {
@@ -268,7 +268,7 @@ export async function getHydrationTotal(userId: string, dateIso: string): Promis
         ),
       )
       .catch(() => [{ total: "0" }]),
-    getSyncState().catch(() => null),
+    getSyncState(userId).catch(() => null),
   ]);
 
   const dbTotal = Number(rows[0]?.total ?? 0);
@@ -343,12 +343,26 @@ export async function listQuestions(userId: string, appointmentId?: string) {
   await ensureDbReady();
   const conditions = [eq(appointmentQuestions.userId, userId)];
   if (appointmentId) conditions.push(eq(appointmentQuestions.appointmentId, appointmentId));
-  return db
-    .select()
+
+  const rows = await db
+    .select({
+      id: appointmentQuestions.id,
+      userId: appointmentQuestions.userId,
+      appointmentId: appointmentQuestions.appointmentId,
+      question: appointmentQuestions.question,
+      answered: appointmentQuestions.answered,
+      createdAt: appointmentQuestions.createdAt,
+      appointmentDeletedAt: appointments.deletedAt,
+    })
     .from(appointmentQuestions)
+    .leftJoin(appointments, eq(appointments.id, appointmentQuestions.appointmentId))
     .where(and(...conditions))
     .orderBy(asc(appointmentQuestions.createdAt))
     .catch(() => []);
+
+  return rows
+    .filter((row) => !row.appointmentId || row.appointmentDeletedAt === null)
+    .map(({ appointmentDeletedAt, ...rest }) => rest);
 }
 
 /* ------------------------------- Orientações ------------------------------- */
